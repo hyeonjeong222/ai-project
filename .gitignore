@@ -1,0 +1,22 @@
+# Dependencies and framework build output
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Local environment secrets: keep the variable-name template tracked.
+.env*
+!.env.example
+
+# Local Supabase state and logs
+supabase/.branches/
+supabase/.temp/
+.vercel/
+*.log
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
