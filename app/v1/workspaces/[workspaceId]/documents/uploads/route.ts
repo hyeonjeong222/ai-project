@@ -35,11 +35,13 @@ export async function POST(
     const input = schema.parse(await request.json());
     const env = getServerEnv();
     const fileName = sanitizeFileName(input.fileName);
-    validateDeclaredFile(fileName, input.contentType, input.byteSize, env.RAG_MAX_FILE_BYTES);
+    const extension = validateDeclaredFile(fileName, input.contentType, input.byteSize, env.RAG_MAX_FILE_BYTES);
 
     const documentId = randomUUID();
     const versionId = randomUUID();
-    const storagePath = `${workspaceId}/${documentId}/${versionId}/${fileName}`;
+    // Storage object keys are deliberately ASCII-only. The original Korean file name
+    // stays in document_versions.original_file_name and is restored on download.
+    const storagePath = `${workspaceId}/${documentId}/${versionId}/source${extension}`;
     const admin = createAdminClient();
     const { error: registerError } = await admin.rpc("register_document_upload_v2", {
       p_document_id: documentId,

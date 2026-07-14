@@ -19,8 +19,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState<"password" | "magic" | null>(null);
-  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState<"password" | null>(null);
   const [error, setError] = useState("");
   const managerMode = searchParams.get("mode") === "admin";
   const requestedNext = searchParams.get("next");
@@ -37,23 +36,6 @@ function LoginContent() {
       return;
     }
     window.location.assign(next);
-  }
-
-  async function sendMagicLink() {
-    if (!email) {
-      setError("이메일을 먼저 입력해 주세요.");
-      return;
-    }
-    setLoading("magic");
-    setError("");
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
-    const { error: authError } = await createSupabaseBrowserClient().auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: redirectTo, shouldCreateUser: false },
-    });
-    if (authError) setError("로그인 링크를 보내지 못했습니다. 관리자에게 계정을 확인해 주세요.");
-    else setMessage("메일함에서 Onboard AI 로그인 링크를 확인해 주세요.");
-    setLoading(null);
   }
 
   return (
@@ -83,14 +65,9 @@ function LoginContent() {
               <span className="field-shell"><KeyRound size={17} /><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="비밀번호" required /></span>
             </label>
             {error && <p className="form-alert error" role="alert">{error}</p>}
-            {message && <p className="form-alert success" role="status">{message}</p>}
             <button className="button primary wide" disabled={Boolean(loading)}>{loading === "password" ? "로그인 중…" : "로그인"}</button>
           </form>
-          <div className="login-divider"><span>또는</span></div>
-          <button className="button secondary wide" type="button" onClick={sendMagicLink} disabled={Boolean(loading)}>
-            {loading === "magic" ? "전송 중…" : "이메일 로그인 링크 받기"}
-          </button>
-          <p className="login-help">이메일 로그인 링크는 비밀번호 대신 이메일로 받은 1회용 로그인 링크로 접속하는 방식입니다. {managerMode ? "관리자 권한이 없으면 직원 화면으로만 접근할 수 있습니다." : "계정이 없다면 회사 관리자에게 초대를 요청하세요."}</p>
+          <p className="login-help">계정이 없거나 비밀번호를 모르면 회사 관리자에게 초대 또는 비밀번호 재설정을 요청해 주세요.</p>
         </div>
       </section>
     </main>

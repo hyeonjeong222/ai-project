@@ -1,13 +1,17 @@
-import "server-only";
-
-import { parse } from "kordoc";
-
 import { getServerEnv } from "@/lib/config/env";
 import { adaptKordocBlocks } from "@/lib/rag/kordoc-adapter";
 import { createStructuralChunks } from "@/lib/rag/chunking";
+import { parseKordoc } from "@/lib/rag/kordoc";
 import { embedTexts } from "@/lib/rag/openai";
 import { sha256Hex } from "@/lib/server/files";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+type SupabaseErrorLike = {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+};
 
 interface ClaimedJob {
   job_id: string;
@@ -52,9 +56,19 @@ function isRetryable(error: unknown) {
   return !["ENCRYPTED", "ZIP_BOMB", "IMAGE_BASED_PDF", "UNSUPPORTED_FORMAT", "HASH_MISMATCH"].includes(code);
 }
 
+function supabaseErrorMessage(action: string, error: SupabaseErrorLike) {
+  const parts = [
+    error.message,
+    error.code ? `code=${error.code}` : undefined,
+    error.details ? `details=${error.details}` : undefined,
+    error.hint ? `hint=${error.hint}` : undefined,
+  ].filter(Boolean);
+  return `${action}: ${parts.join(" | ") || "Unknown Supabase error"}`;
+}
+
 async function setStage(jobId: string, status: "PARSING" | "CHUNKING" | "EMBEDDING") {
   const { error } = await createAdminClient().rpc("set_ingestion_stage", { p_job_id: jobId, p_status: status });
-  if (error) throw new Error(`Failed to set ingestion stage: ${status}`);
+  if (error) throw new Error(supabaseErrorMessage(`Failed to set ingestion stage ${status}`, error));
 }
 
 export async function processClaimedJob(job: ClaimedJob) {
@@ -71,7 +85,7 @@ export async function processClaimedJob(job: ClaimedJob) {
 
     await setStage(job.job_id, "PARSING");
     const exactBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-    const parsed = await parse(exactBuffer);
+    const parsed = await parseKordoc(exactBuffer);
     if (!parsed.success) {
       const failure = parseError(parsed);
       throw Object.assign(new Error(failure.message), { code: failure.code });
@@ -81,7 +95,7 @@ export async function processClaimedJob(job: ClaimedJob) {
     }
 
     await setStage(job.job_id, "CHUNKING");
-    const blocks = adaptKordocBlocks(parsed.blocks);
+    const blocks = await adaptKordocBlocks(parsed.blocks);
     const chunks = createStructuralChunks({
       workspaceId: job.workspace_id,
       documentTitle: job.document_title,
@@ -100,7 +114,7 @@ export async function processClaimedJob(job: ClaimedJob) {
       p_parsing_warnings: parsed.warnings ?? [],
       p_total_pages: totalPages,
     });
-    if (completeError) throw new Error("Failed to commit indexed chunks");
+    if (completeError) throw new Error(supabaseErrorMessage("Failed to commit indexed chunks", completeError));
     return { jobId: job.job_id, versionId: job.version_id, chunks: chunks.length, status: "READY" as const };
   } catch (error) {
     const failure = safeFailure(error);
@@ -111,7 +125,7 @@ export async function processClaimedJob(job: ClaimedJob) {
       p_retryable: isRetryable(error),
       p_needs_ocr: needsOcr,
     });
-    if (failError) console.error("Failed to record ingestion failure", job.job_id);
+    if (failError) console.error(supabaseErrorMessage(`Failed to record ingestion failure ${job.job_id}`, failError));
     return { jobId: job.job_id, versionId: job.version_id, status: needsOcr ? "NEEDS_OCR" as const : "FAILED" as const };
   }
 }
@@ -122,7 +136,7 @@ export async function processPendingJobs(limit = getServerEnv().RAG_WORKER_BATCH
     const { data, error } = await createAdminClient().rpc("claim_ingestion_job", {
       p_worker_id: getServerEnv().RAG_WORKER_ID,
     });
-    if (error) throw new Error("Failed to claim ingestion job");
+    if (error) throw new Error(supabaseErrorMessage("Failed to claim ingestion job", error));
     const job = Array.isArray(data) ? data[0] as ClaimedJob | undefined : undefined;
     if (!job) break;
     results.push(await processClaimedJob(job));

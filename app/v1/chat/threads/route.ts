@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { requireUser, requireWorkspaceMember } from "@/lib/server/auth";
+import { requireUser, requireWorkspaceEditor } from "@/lib/server/auth";
 import { ApiError, errorResponse } from "@/lib/server/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const user = await requireUser(request);
     const workspaceId = new URL(request.url).searchParams.get("workspaceId");
     z.string().uuid().parse(workspaceId);
-    await requireWorkspaceMember(workspaceId!, user.id);
+    await requireWorkspaceEditor(workspaceId!, user.id);
     const admin = createAdminClient();
     const { data: threads, error } = await admin
       .from("chat_threads")
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   try {
     const user = await requireUser(request);
     const input = schema.parse(await request.json());
-    await requireWorkspaceMember(input.workspaceId, user.id);
+    await requireWorkspaceEditor(input.workspaceId, user.id);
     const { data, error } = await createAdminClient().from("chat_threads").insert({
       workspace_id: input.workspaceId,
       user_id: user.id,

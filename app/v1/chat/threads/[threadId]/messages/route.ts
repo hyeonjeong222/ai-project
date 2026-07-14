@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getServerEnv, hasOpenAIConfig } from "@/lib/config/env";
 import { getOpenAI } from "@/lib/rag/openai";
 import { retrieveEvidence } from "@/lib/rag/retrieval";
-import { requireUser, requireWorkspaceMember } from "@/lib/server/auth";
+import { requireUser, requireWorkspaceEditor } from "@/lib/server/auth";
 import { ApiError, errorResponse } from "@/lib/server/errors";
 import { sha256Hex } from "@/lib/server/files";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -70,7 +70,7 @@ export async function GET(
       .maybeSingle();
     if (threadError || !thread) throw new ApiError(404, "THREAD_NOT_FOUND", "대화를 찾을 수 없습니다.");
     if (thread.user_id !== user.id) throw new ApiError(403, "THREAD_FORBIDDEN", "대화 접근 권한이 없습니다.");
-    await requireWorkspaceMember(thread.workspace_id, user.id);
+    await requireWorkspaceEditor(thread.workspace_id, user.id);
     const { data: messages, error } = await admin
       .from("chat_messages")
       .select("id,thread_id,role,content,citations,feedback,created_at")
@@ -100,7 +100,7 @@ export async function POST(
       .maybeSingle();
     if (threadError || !thread) throw new ApiError(404, "THREAD_NOT_FOUND", "대화를 찾을 수 없습니다.");
     if (thread.user_id !== user.id) throw new ApiError(403, "THREAD_FORBIDDEN", "대화 접근 권한이 없습니다.");
-    await requireWorkspaceMember(thread.workspace_id, user.id);
+    await requireWorkspaceEditor(thread.workspace_id, user.id);
 
     const { data: recent, error: historyError } = await admin
       .from("chat_messages")

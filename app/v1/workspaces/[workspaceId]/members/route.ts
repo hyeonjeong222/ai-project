@@ -6,7 +6,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const inviteSchema = z.object({
   email: z.string().trim().email().max(320).transform((value) => value.toLowerCase()),
-  role: z.enum(["ADMIN", "MEMBER"]),
+  role: z.enum(["ADMIN", "MEMBER", "VIEWER"]),
+});
+
+const updateRoleSchema = z.object({
+  userId: z.string().uuid(),
+  role: z.enum(["ADMIN", "MEMBER", "VIEWER"]),
 });
 
 async function accountSummary(userId: string) {
@@ -42,8 +47,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ wor
     const { workspaceId } = await params;
     z.string().uuid().parse(workspaceId);
     const user = await requireUser(request);
-    await requireWorkspaceAdmin(workspaceId, user.id);
+    const actor = await requireWorkspaceAdmin(workspaceId, user.id);
     const input = inviteSchema.parse(await request.json());
+    if (actor.role === "ADMIN" && input.role === "ADMIN") {
+      throw new ApiError(403, "OWNER_APPROVAL_REQUIRED", "매뉴얼 관리자 초대는 회사 관리자만 할 수 있습니다.");
+    }
     const admin = createAdminClient();
     const { data: existing, error: existingError } = await admin.from("workspace_invites")
       .select("id").eq("workspace_id", workspaceId).eq("email", input.email).is("accepted_at", null).maybeSingle();
@@ -56,6 +64,34 @@ export async function POST(request: Request, { params }: { params: Promise<{ wor
     const { data, error } = inviteResult;
     if (error || !data) throw new ApiError(500, "DATABASE_ERROR", "초대를 만들지 못했습니다.");
     return Response.json({ invite: data }, { status: 201 });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ workspaceId: string }> }) {
+  try {
+    const { workspaceId } = await params;
+    z.string().uuid().parse(workspaceId);
+    const user = await requireUser(request);
+    const actor = await requireWorkspaceAdmin(workspaceId, user.id);
+    const input = updateRoleSchema.parse(await request.json());
+    if (input.userId === user.id) throw new ApiError(400, "SELF_ROLE_CHANGE_FORBIDDEN", "본인의 권한은 이 화면에서 변경할 수 없습니다.");
+
+    const admin = createAdminClient();
+    const { data: target, error: targetError } = await admin.from("workspace_members")
+      .select("user_id,role,created_at").eq("workspace_id", workspaceId).eq("user_id", input.userId).maybeSingle();
+    if (targetError) throw new ApiError(500, "DATABASE_ERROR", "구성원 권한을 확인하지 못했습니다.");
+    if (!target) throw new ApiError(404, "MEMBER_NOT_FOUND", "구성원을 찾을 수 없습니다.");
+    if (target.role === "OWNER") throw new ApiError(403, "OWNER_ROLE_PROTECTED", "회사 관리자 권한은 이 화면에서 변경할 수 없습니다.");
+    if (actor.role === "ADMIN" && (target.role === "ADMIN" || input.role === "ADMIN")) {
+      throw new ApiError(403, "OWNER_APPROVAL_REQUIRED", "매뉴얼 관리자의 승격·변경은 회사 관리자만 할 수 있습니다.");
+    }
+
+    const { data, error } = await admin.from("workspace_members").update({ role: input.role })
+      .eq("workspace_id", workspaceId).eq("user_id", input.userId).select("user_id,role,created_at").single();
+    if (error || !data) throw new ApiError(500, "DATABASE_ERROR", "구성원 권한을 변경하지 못했습니다.");
+    return Response.json({ member: { ...data, ...(await accountSummary(data.user_id)) } });
   } catch (error) {
     return errorResponse(error);
   }

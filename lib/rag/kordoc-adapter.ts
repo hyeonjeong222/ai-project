@@ -1,6 +1,6 @@
 import type { IRBlock } from "kordoc";
-import { blocksToMarkdown } from "kordoc";
 
+import { blocksToKordocMarkdown } from "@/lib/rag/kordoc";
 import type { StructuralBlock } from "@/lib/rag/types";
 
 function objectValue(value: unknown): Record<string, unknown> {
@@ -11,12 +11,12 @@ function stringValue(...values: unknown[]) {
   return values.find((value) => typeof value === "string" && value.trim()) as string | undefined;
 }
 
-export function adaptKordocBlocks(blocks: IRBlock[]): StructuralBlock[] {
-  return blocks.map((block, index) => {
+export async function adaptKordocBlocks(blocks: IRBlock[]): Promise<StructuralBlock[]> {
+  return Promise.all(blocks.map(async (block, index) => {
     const record = objectValue(block);
     let markdown = "";
     try {
-      markdown = blocksToMarkdown([block]);
+      markdown = await blocksToKordocMarkdown([block]);
     } catch {
       markdown = stringValue(record.markdown, record.text, record.content) ?? "";
     }
@@ -29,5 +29,5 @@ export function adaptKordocBlocks(blocks: IRBlock[]): StructuralBlock[] {
         : typeof record.page === "number" ? record.page : undefined,
       metadata: record,
     };
-  });
+  }));
 }

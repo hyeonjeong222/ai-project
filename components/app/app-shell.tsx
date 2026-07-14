@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Bot, Building2, ChevronDown, ClipboardList, FilePlus2, Files, LayoutDashboard, LogOut, Menu, MessageSquareText, X } from "lucide-react";
+import { BarChart3, BookOpenText, Bot, Building2, ChevronDown, ClipboardList, FilePlus2, Files, LayoutDashboard, LogOut, Menu, MessageSquareText, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -10,13 +10,14 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const employeeNavigation = [
   { href: "/chat", label: "AI에게 질문", icon: MessageSquareText },
+  { href: "/manuals", label: "매뉴얼 열람", icon: BookOpenText },
   { href: "/requests", label: "내 요청", icon: ClipboardList },
 ];
 const adminNavigation = [
   { href: "/admin", label: "대시보드", icon: LayoutDashboard },
   { href: "/admin/documents", label: "문서 관리", icon: Files },
   { href: "/admin/documents/new", label: "최신 매뉴얼 업로드", icon: FilePlus2 },
-  { href: "/admin/requests", label: "문의함", icon: ClipboardList },
+  { href: "/admin/requests", label: "사원 문의·답변", icon: ClipboardList },
   { href: "/admin/history", label: "채팅 기록", icon: MessageSquareText },
   { href: "/admin/analytics", label: "질문 통계", icon: BarChart3 },
   { href: "/admin/company", label: "회사·구성원", icon: Building2 },
@@ -51,7 +52,12 @@ export function AppShell({ children, userEmail }: { children: React.ReactNode; u
     </main>
   );
 
-  const navigation = canAdmin ? [...employeeNavigation, ...adminNavigation] : employeeNavigation;
+  const employeeLinks = workspace.role === "VIEWER"
+    ? employeeNavigation.filter((item) => item.href === "/manuals")
+    : canAdmin
+      ? employeeNavigation.filter((item) => item.href !== "/requests")
+      : employeeNavigation;
+  const navigation = canAdmin ? [...employeeLinks, ...adminNavigation] : employeeLinks;
   return (
     <div className="product-shell">
       {mobileOpen && <button className="mobile-backdrop" aria-label="메뉴 닫기" onClick={() => setMobileOpen(false)} />}
@@ -61,14 +67,14 @@ export function AppShell({ children, userEmail }: { children: React.ReactNode; u
         <nav className="sidebar-nav" aria-label="주요 메뉴">
           {navigation.map(({ href, label, icon: Icon }, index) => {
             const active = href === "/admin" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
-            return <div key={href}>{index === 1 && canAdmin && <p className="nav-section">ADMIN</p>}<Link className={active ? "active" : ""} href={href} onClick={() => setMobileOpen(false)}><Icon size={18} /><span>{label}</span></Link></div>;
+            return <div key={href}>{index === employeeLinks.length && canAdmin && <p className="nav-section">ADMIN</p>}<Link className={active ? "active" : ""} href={href} onClick={() => setMobileOpen(false)}><Icon size={18} /><span>{label}</span></Link></div>;
           })}
         </nav>
         <div className="sidebar-footer"><div className="user-avatar">{userEmail.slice(0, 1).toUpperCase()}</div><div className="user-copy"><strong>{userEmail.split("@")[0]}</strong><span>{workspace.role}</span></div><button className="icon-button inverse" onClick={signOut} aria-label="로그아웃"><LogOut size={18} /></button></div>
       </aside>
       <div className="product-main">
         <button className="mobile-menu mobile-only" onClick={() => setMobileOpen(true)} aria-label="메뉴 열기"><Menu size={20} /></button>
-        {!canAdmin && pathname.startsWith("/admin") ? <main className="admin-access-denied"><div className="brand-mark"><Bot size={20} /></div><p className="eyebrow">ADMIN ONLY</p><h1>관리자 전용 공간입니다</h1><p>매뉴얼 원문, 최신 문서 업로드, 직원 문의 답변은 매뉴얼 관리 담당자만 사용할 수 있습니다.</p><Link className="button primary" href="/chat">AI에게 질문하기</Link></main> : children}
+        {!canAdmin && pathname.startsWith("/admin") ? <main className="admin-access-denied"><div className="brand-mark"><Bot size={20} /></div><p className="eyebrow">ADMIN ONLY</p><h1>관리자 전용 공간입니다</h1><p>문서 업로드·권한 관리·직원 문의 답변은 매뉴얼 관리 담당자만 사용할 수 있습니다. 게시된 매뉴얼 원문은 ‘매뉴얼 열람’ 메뉴에서 확인할 수 있습니다.</p><Link className="button primary" href="/manuals">매뉴얼 열람하기</Link></main> : children}
       </div>
     </div>
   );

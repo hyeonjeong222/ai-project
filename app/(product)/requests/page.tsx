@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { RequestCenter } from "@/components/requests/request-center";
+import { RequestsEntry } from "@/components/requests/requests-entry";
 
 export const metadata: Metadata = { title: "매뉴얼·답변 요청" };
-export default function RequestsPage() { return <RequestCenter />; }
+export default function RequestsPage() { return <RequestsEntry />; }

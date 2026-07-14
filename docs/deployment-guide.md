@@ -7,7 +7,7 @@
 - OpenAI 프로젝트 API key 및 답변 모델의 비용/품질 정책
 - 배포 URL과 Supabase Auth redirect URL
 
-현재 코드 기본값은 25MB, `text-embedding-3-small` 1536차원, 효율형 `gpt-5.6-luna`, 동시 작업 1개입니다.
+현재 코드 기본값은 200MB, `text-embedding-3-small` 1536차원, 효율형 `gpt-5.6-luna`, 동시 작업 1개입니다.
 
 ## 2. Supabase
 
@@ -45,7 +45,7 @@ select tablename, rowsecurity from pg_tables where schemaname = 'public' order b
 | `OPENAI_API_KEY` | 서버 비밀 | 임베딩·답변 |
 | `OPENAI_RESPONSE_MODEL` | 서버 설정 | 기본 `gpt-5.6-luna` |
 | `CRON_SECRET` | 서버 비밀 | 워커 엔드포인트 인증, 32자 이상 |
-| `RAG_MAX_FILE_BYTES` | 서버 설정 | 기본 26214400 |
+| `RAG_MAX_FILE_BYTES` | 서버 설정 | 기본 209715200 (200MB) |
 | `RAG_WORKER_ID` | 서버 설정 | 로그/lock 식별자 |
 | `RAG_WORKER_BATCH_SIZE` | 서버 설정 | 호출당 1~5개 |
 

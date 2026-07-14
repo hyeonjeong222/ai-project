@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { requireUser, requireWorkspaceAdmin, requireWorkspaceMember } from "@/lib/server/auth";
+import { requireUser, requireWorkspaceAdmin, requireWorkspaceEditor } from "@/lib/server/auth";
 import { ApiError, errorResponse } from "@/lib/server/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ work
     const admin = createAdminClient();
     const isAdminView = new URL(request.url).searchParams.get("scope") === "admin";
     if (isAdminView) await requireWorkspaceAdmin(workspaceId, user.id);
-    else await requireWorkspaceMember(workspaceId, user.id);
+    else await requireWorkspaceEditor(workspaceId, user.id);
 
     let query = admin.from("support_requests")
       .select("id,workspace_id,requester_id,thread_id,kind,subject,content,status,response,responded_by,responded_at,created_at,updated_at")
@@ -49,7 +49,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ wor
     const { workspaceId } = await params;
     z.string().uuid().parse(workspaceId);
     const user = await requireUser(request);
-    await requireWorkspaceMember(workspaceId, user.id);
+    await requireWorkspaceEditor(workspaceId, user.id);
     const input = createSchema.parse(await request.json());
     const admin = createAdminClient();
     if (input.threadId) {

@@ -12,10 +12,10 @@ interface Citation { chunkId: string; documentId: string; documentTitle: string;
 interface Message { id: string; role: "USER" | "ASSISTANT"; content: string; citations: Citation[]; feedback: 1 | -1 | null; pending?: boolean }
 
 const suggestions = [
-  ["연차·휴가", "연차는 며칠 전에 신청해야 하나요?"],
-  ["법인카드", "법인카드는 어떤 경우에 사용할 수 있나요?"],
-  ["출장·정산", "출장비 정산 절차와 기한을 알려주세요."],
-  ["재택근무", "재택근무 신청 기준이 있나요?"],
+  ["업무 책임자", "DRI가 뭐야?"],
+  ["보안 신고", "보안 사고가 의심되면 어떻게 신고해?"],
+  ["계정 보안", "2단계 인증은 어떻게 설정해?"],
+  ["고객 요청", "고객이 데이터 삭제를 요청하면 어떻게 처리해?"],
 ];
 
 function formatRelative(value: string) {

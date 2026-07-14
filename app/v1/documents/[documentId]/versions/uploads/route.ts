@@ -39,9 +39,10 @@ export async function POST(
 
     const env = getServerEnv();
     const fileName = sanitizeFileName(input.fileName);
-    validateDeclaredFile(fileName, input.contentType, input.byteSize, env.RAG_MAX_FILE_BYTES);
+    const extension = validateDeclaredFile(fileName, input.contentType, input.byteSize, env.RAG_MAX_FILE_BYTES);
     const versionId = randomUUID();
-    const storagePath = `${document.workspace_id}/${documentId}/${versionId}/${fileName}`;
+    // Keep Storage keys portable; preserve the user-facing original name in the database.
+    const storagePath = `${document.workspace_id}/${documentId}/${versionId}/source${extension}`;
     const { error: registerError } = await admin.rpc("register_document_replacement_upload", {
       p_version_id: versionId,
       p_document_id: documentId,

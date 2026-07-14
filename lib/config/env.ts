@@ -1,5 +1,3 @@
-import "server-only";
-
 import { z } from "zod";
 
 const serverSchema = z.object({
@@ -11,7 +9,7 @@ const serverSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_RESPONSE_MODEL: z.string().min(1).default("gpt-5.6-luna"),
   CRON_SECRET: z.string().min(32),
-  RAG_MAX_FILE_BYTES: z.coerce.number().int().positive().default(25 * 1024 * 1024),
+  RAG_MAX_FILE_BYTES: z.coerce.number().int().positive().default(200 * 1024 * 1024),
   RAG_WORKER_ID: z.string().min(1).default("worker"),
   RAG_WORKER_BATCH_SIZE: z.coerce.number().int().min(1).max(5).default(1),
 });
