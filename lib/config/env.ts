@@ -28,12 +28,16 @@ const openAIApiKeySchema = z.string().min(20).refine(
   "OPENAI_API_KEY must be a real API key",
 );
 
+function normalizeSecret(value: string | undefined) {
+  return value?.trim().replace(/^\uFEFF/, "");
+}
+
 export function hasOpenAIConfig() {
-  return openAIApiKeySchema.safeParse(process.env.OPENAI_API_KEY).success;
+  return openAIApiKeySchema.safeParse(normalizeSecret(process.env.OPENAI_API_KEY)).success;
 }
 
 export function getOpenAIApiKey() {
-  return openAIApiKeySchema.parse(getServerEnv().OPENAI_API_KEY);
+  return openAIApiKeySchema.parse(normalizeSecret(getServerEnv().OPENAI_API_KEY));
 }
 
 export function serverConfigStatus() {
