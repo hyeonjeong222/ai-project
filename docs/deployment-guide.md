@@ -98,7 +98,7 @@ npx.cmd vercel --prod
 
 배포 후 순서대로 확인합니다.
 
-1. `/api/health`가 `ok`인지 확인
+1. 미인증 `/api/health`가 `up`인지 확인하고, 설정 상세가 필요하면 `Authorization: Bearer <CRON_SECRET>`로 호출
 2. 로그인 사용자로 workspace 생성
 3. `/admin/documents/new`에서 작은 DOCX/PDF를 signed URL로 업로드
 4. 워커 호출 후 상태가 `READY`인지 확인

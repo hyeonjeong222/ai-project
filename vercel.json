@@ -1,6 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/internal/ingestion/run",
+      "schedule": "*/5 * * * *"
+    }
+  ],
   "functions": {
     "app/api/internal/ingestion/run/route.ts": {
       "maxDuration": 300

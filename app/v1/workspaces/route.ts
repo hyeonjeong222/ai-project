@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { hasVerifiedEmail } from "@/lib/auth/verified-email";
 import { requireUser } from "@/lib/server/auth";
 import { errorResponse, ApiError } from "@/lib/server/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     const admin = createAdminClient();
     // An invited employee joins the right tenant on first login. This avoids
     // making them create a company workspace just to use the product.
-    if (user.email) {
+    if (hasVerifiedEmail(user)) {
       const { data: pending, error: inviteError } = await admin.from("workspace_invites")
         .select("id,workspace_id,role").eq("email", user.email.toLowerCase()).is("accepted_at", null);
       if (inviteError) throw new ApiError(500, "DATABASE_ERROR", "초대를 확인하지 못했습니다.");

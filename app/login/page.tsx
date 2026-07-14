@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
 
+import { sanitizeInternalRedirect } from "@/lib/auth/redirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -23,7 +24,11 @@ function LoginContent() {
   const [error, setError] = useState("");
   const managerMode = searchParams.get("mode") === "admin";
   const requestedNext = searchParams.get("next");
-  const next = requestedNext?.startsWith("/") ? requestedNext : managerMode ? "/admin" : "/chat";
+  const next = sanitizeInternalRedirect(
+    requestedNext,
+    typeof window === "undefined" ? "http://localhost" : window.location.origin,
+    managerMode ? "/admin" : "/chat",
+  );
 
   async function signIn(event: FormEvent) {
     event.preventDefault();

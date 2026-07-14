@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Bot, Check, ClipboardPlus, Menu, MessageSquarePlus, PanelLeftClose, Send, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
+import { ArrowRight, Bot, Check, ClipboardPlus, Library, Menu, MessageSquarePlus, PanelLeftClose, Send, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
@@ -9,7 +9,9 @@ import { api } from "@/lib/client/api";
 
 interface Thread { id: string; title: string | null; updated_at: string; messageCount: number; preview: string }
 interface Citation { chunkId: string; documentId: string; documentTitle: string; pageStart: number | null; pageEnd: number | null; sectionPath: string[]; preview: string; sourceUrl: string }
-interface Message { id: string; role: "USER" | "ASSISTANT"; content: string; citations: Citation[]; feedback: 1 | -1 | null; pending?: boolean }
+interface RetrievalStatus { query: string; candidateCount: number; selectedCount: number }
+interface Message { id: string; role: "USER" | "ASSISTANT"; content: string; citations: Citation[]; feedback: 1 | -1 | null; pending?: boolean; retrieval?: RetrievalStatus }
+interface ChatDocument { id: string; title: string; category: string | null }
 
 const suggestions = [
   ["업무 책임자", "DRI가 뭐야?"],
@@ -28,6 +30,8 @@ function formatRelative(value: string) {
 export function ChatWorkspace() {
   const { workspace } = useWorkspace();
   const [threads, setThreads] = useState<Thread[]>([]);
+  const [documents, setDocuments] = useState<ChatDocument[]>([]);
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState("");
@@ -42,13 +46,23 @@ export function ChatWorkspace() {
     setThreads(data.threads);
   }, [workspace]);
 
+  const loadDocuments = useCallback(async () => {
+    if (!workspace) return;
+    const data = await api<{ documents: ChatDocument[] }>(`/v1/workspaces/${workspace.id}/documents?view=chat`);
+    setDocuments(data.documents);
+  }, [workspace]);
+
   useEffect(() => {
     if (!workspace) return;
     setStatus("loading");
     setActiveThreadId(null);
     setMessages([]);
-    loadThreads().catch(() => setError("대화 환경을 불러오지 못했습니다.")).finally(() => setStatus("idle"));
-  }, [workspace, loadThreads]);
+    setDocuments([]);
+    setSelectedDocumentIds([]);
+    Promise.all([loadThreads(), loadDocuments()])
+      .catch(() => setError("대화 환경을 불러오지 못했습니다."))
+      .finally(() => setStatus("idle"));
+  }, [workspace, loadDocuments, loadThreads]);
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [messages]);
 
@@ -79,6 +93,13 @@ export function ChatWorkspace() {
       setMessages((current) => current.map((message) => message.id === tempId ? { ...message, content: message.content + delta } : message));
     } else if (eventName === "citation") {
       setMessages((current) => current.map((message) => message.id === tempId ? { ...message, citations: [...message.citations, data as unknown as Citation] } : message));
+    } else if (eventName === "retrieval") {
+      const retrieval = {
+        query: typeof data.query === "string" ? data.query : "",
+        candidateCount: typeof data.candidateCount === "number" ? data.candidateCount : 0,
+        selectedCount: typeof data.selectedCount === "number" ? data.selectedCount : 0,
+      };
+      setMessages((current) => current.map((message) => message.id === tempId ? { ...message, retrieval } : message));
     } else if (eventName === "done") {
       const id = typeof data.messageId === "string" ? data.messageId : tempId;
       setMessages((current) => current.map((message) => message.id === tempId ? { ...message, id, pending: false } : message));
@@ -112,7 +133,7 @@ export function ChatWorkspace() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, documentIds: [] }),
+        body: JSON.stringify({ content, documentIds: selectedDocumentIds }),
       });
       if (!response.ok || !response.body) {
         const payload = await response.json().catch(() => null);
@@ -165,7 +186,17 @@ export function ChatWorkspace() {
       <section className="chat-stage">
         <header className="page-topbar chat-topbar">
           <div className="topbar-title"><button className="icon-button thread-menu-button" onClick={() => setSessionsOpen(true)} aria-label="대화 목록 열기"><Menu size={19} /></button><div><p className="eyebrow">EMPLOYEE ASSISTANT</p><h1>{activeThread?.title || "새 대화"}</h1></div></div>
-          <Link className="button secondary request-link" href="/requests"><ClipboardPlus size={16} />문의 요청</Link>
+          <div className="chat-topbar-actions">
+            <details className="document-filter">
+              <summary><Library size={15} />{selectedDocumentIds.length ? `${selectedDocumentIds.length}개 문서` : "전체 문서"}</summary>
+              <div className="document-filter-menu">
+                <div><strong>검색 문서 선택</strong><button type="button" onClick={() => setSelectedDocumentIds([])}>전체 해제</button></div>
+                {documents.length === 0 && <p className="document-filter-empty">검색 가능한 문서가 없습니다.</p>}
+                {documents.map((document) => <label key={document.id}><input type="checkbox" checked={selectedDocumentIds.includes(document.id)} onChange={(event) => setSelectedDocumentIds((current) => event.target.checked ? [...current, document.id] : current.filter((id) => id !== document.id))} /><span>{document.title}</span></label>)}
+              </div>
+            </details>
+            <Link className="button secondary request-link" href="/requests"><ClipboardPlus size={16} />문의 요청</Link>
+          </div>
         </header>
 
         <div className="message-viewport" ref={listRef}>
@@ -176,7 +207,7 @@ export function ChatWorkspace() {
               {messages.map((message) => message.role === "USER" ? (
                 <article key={message.id} className="message-row user"><div className="message-bubble user">{message.content}</div></article>
               ) : (
-                <article key={message.id} className="message-row assistant"><div className="assistant-avatar"><Bot size={17} /></div><div className="assistant-stack"><div className={`message-bubble assistant ${message.pending ? "streaming" : ""}`}>{message.content || <span className="thinking"><i /><i /><i /></span>}</div>{message.citations.length > 0 && <div className="citation-stack">{message.citations.map((citation, index) => <div key={citation.chunkId} className="citation-safe"><span className="citation-index">{index + 1}</span><span><strong>{citation.documentTitle}</strong><small>{citation.sectionPath.join(" › ") || "매뉴얼 근거"}{citation.pageStart ? ` · ${citation.pageStart}p` : ""}</small></span></div>)}</div>}{!message.pending && message.citations.length === 0 && <Link className="human-answer-link" href="/requests">답변이 부족한가요? 담당자에게 직접 답변 요청</Link>}{!message.pending && message.id.startsWith("stream-") === false && <div className="answer-actions"><span>도움이 되었나요?</span><button className={message.feedback === 1 ? "selected" : ""} onClick={() => rateMessage(message, 1)} aria-label="도움이 됐어요"><ThumbsUp size={14} /></button><button className={message.feedback === -1 ? "selected negative" : ""} onClick={() => rateMessage(message, -1)} aria-label="개선이 필요해요"><ThumbsDown size={14} /></button></div>}</div></article>
+                <article key={message.id} className="message-row assistant"><div className="assistant-avatar"><Bot size={17} /></div><div className="assistant-stack"><div className={`message-bubble assistant ${message.pending ? "streaming" : ""}`}>{message.content || <span className="thinking"><i /><i /><i /></span>}</div>{process.env.NODE_ENV !== "production" && message.retrieval && <small className="retrieval-debug">검색 후보 {message.retrieval.candidateCount}개 · 근거 {message.retrieval.selectedCount}개 · {message.retrieval.query}</small>}{message.citations.length > 0 && <div className="citation-stack">{message.citations.map((citation, index) => <div key={citation.chunkId} className="citation-safe"><span className="citation-index">{index + 1}</span><span><strong>{citation.documentTitle}</strong><small>{citation.sectionPath.join(" › ") || "매뉴얼 근거"}{citation.pageStart ? ` · ${citation.pageStart}p` : ""}</small></span></div>)}</div>}{!message.pending && message.citations.length === 0 && <Link className="human-answer-link" href="/requests">답변이 부족한가요? 담당자에게 직접 답변 요청</Link>}{!message.pending && message.id.startsWith("stream-") === false && <div className="answer-actions"><span>도움이 되었나요?</span><button className={message.feedback === 1 ? "selected" : ""} onClick={() => rateMessage(message, 1)} aria-label="도움이 됐어요"><ThumbsUp size={14} /></button><button className={message.feedback === -1 ? "selected negative" : ""} onClick={() => rateMessage(message, -1)} aria-label="개선이 필요해요"><ThumbsDown size={14} /></button></div>}</div></article>
               ))}
               {status === "loading" && <div className="inline-loading"><span className="spinner" />대화를 불러오는 중…</div>}
               {status === "error" && <div className="chat-error"><strong>AI가 답변을 이어가지 못했습니다.</strong><span>{error}</span><div><Link href="/requests">담당자에게 답변 요청</Link><button onClick={() => setStatus("idle")}>닫기</button></div></div>}

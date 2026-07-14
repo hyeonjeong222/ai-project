@@ -4,7 +4,7 @@ import { maximalMarginalRelevance, reciprocalRankFusion, type RawRetrievalHit } 
 import { embedTexts, getOpenAI } from "@/lib/rag/openai";
 import { ApiError } from "@/lib/server/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getServerEnv } from "@/lib/config/env";
+import { getOpenAIResponseModel } from "@/lib/config/env";
 
 function compactSupabaseError(error: { message: string; code?: string; details?: string; hint?: string } | null) {
   if (!error) return null;
@@ -19,29 +19,45 @@ function compactSupabaseError(error: { message: string; code?: string; details?:
 export async function validateDocumentFilters(workspaceId: string, documentIds: string[]) {
   if (!documentIds.length) return;
   const unique = [...new Set(documentIds)];
-  const { data, error } = await createAdminClient()
+  const admin = createAdminClient();
+  const [{ data, error }, versions] = await Promise.all([
+    admin
     .from("documents")
     .select("id")
     .eq("workspace_id", workspaceId)
     .is("archived_at", null)
-    .in("id", unique);
-  if (error) throw new ApiError(500, "DATABASE_ERROR", "문서 필터를 확인하지 못했습니다.");
-  if ((data ?? []).length !== unique.length) {
+    .eq("is_active", true)
+    .in("id", unique),
+    admin
+      .from("document_versions")
+      .select("document_id")
+      .in("document_id", unique)
+      .eq("is_current", true)
+      .eq("parse_status", "READY"),
+  ]);
+  if (error || versions.error) throw new ApiError(500, "DATABASE_ERROR", "문서 필터를 확인하지 못했습니다.");
+  const readyIds = new Set((versions.data ?? []).map((version) => version.document_id));
+  if ((data ?? []).length !== unique.length || readyIds.size !== unique.length) {
     throw new ApiError(403, "DOCUMENT_FILTER_FORBIDDEN", "선택한 문서 중 접근할 수 없는 문서가 있습니다.");
   }
 }
 
 export async function rewriteSearchQuery(query: string, history: Array<{ role: string; content: string }>) {
   if (history.length === 0) return query;
-  const context = history.slice(-6).map((item) => `${item.role}: ${item.content}`).join("\n");
-  const response = await getOpenAI().responses.create({
-    model: getServerEnv().OPENAI_RESPONSE_MODEL,
-    instructions: "대화 문맥을 반영해 마지막 질문을 독립적으로 검색 가능한 한 문장으로 바꾸세요. 답변하지 말고 검색문만 출력하세요. 고유명사, 문서명, 조항 번호를 보존하세요.",
-    input: `${context}\nUSER: ${query}`,
-    store: false,
-  });
-  const rewritten = response.output_text.trim();
-  return rewritten && rewritten.length <= 500 ? rewritten : query;
+  try {
+    const context = history.slice(-6).map((item) => `${item.role}: ${item.content}`).join("\n");
+    const response = await getOpenAI().responses.create({
+      model: getOpenAIResponseModel(),
+      instructions: "대화 문맥을 반영해 마지막 질문을 독립적으로 검색 가능한 한 문장으로 바꾸세요. 답변하지 말고 검색문만 출력하세요. 고유명사, 문서명, 조항 번호를 보존하세요.",
+      input: `${context}\nUSER: ${query}`,
+      store: false,
+    });
+    const rewritten = response.output_text.trim();
+    return rewritten && rewritten.length <= 500 ? rewritten : query;
+  } catch {
+    console.warn("Search query rewrite failed; using the original query");
+    return query;
+  }
 }
 
 export async function retrieveEvidence(input: {

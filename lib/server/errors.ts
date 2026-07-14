@@ -11,16 +11,43 @@ export class ApiError extends Error {
   }
 }
 
+const safeDetailKeys: Readonly<Record<string, readonly string[]>> = {
+  CHAT_RATE_LIMITED: ["retryAfterSeconds"],
+};
+
+function safeApiErrorDetails(error: ApiError) {
+  const keys = safeDetailKeys[error.code];
+  if (!keys || !error.details || typeof error.details !== "object" || Array.isArray(error.details)) {
+    return undefined;
+  }
+
+  const details = error.details as Record<string, unknown>;
+  const safe = Object.fromEntries(keys.flatMap((key) => {
+    const value = details[key];
+    return typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+      ? [[key, value]]
+      : [];
+  }));
+  return Object.keys(safe).length ? safe : undefined;
+}
+
 export function errorResponse(error: unknown): Response {
   if (error instanceof ApiError) {
+    const details = safeApiErrorDetails(error);
     return Response.json(
-      { error: { code: error.code, message: error.message, details: error.details } },
+      { error: { code: error.code, message: error.message, ...(details ? { details } : {}) } },
       { status: error.status },
     );
   }
   if (error instanceof ZodError) {
     return Response.json(
-      { error: { code: "VALIDATION_ERROR", message: "요청 형식이 올바르지 않습니다.", details: error.flatten() } },
+      {
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "요청 형식이 올바르지 않습니다.",
+          details: { issueCount: error.issues.length },
+        },
+      },
       { status: 400 },
     );
   }
@@ -30,8 +57,4 @@ export function errorResponse(error: unknown): Response {
     { error: { code: "INTERNAL_ERROR", message: "요청을 처리하지 못했습니다." } },
     { status: 500 },
   );
-}
-
-export function assertDatabaseResult(error: { message: string; code?: string } | null): asserts error is null {
-  if (error) throw new ApiError(500, "DATABASE_ERROR", "데이터베이스 요청에 실패했습니다.");
 }

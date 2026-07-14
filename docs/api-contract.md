@@ -117,6 +117,7 @@ Terminal 상태는 `READY`, `FAILED`, `NEEDS_OCR`, `DELETED`입니다. 질문 UI
 ```
 
 응답 `Content-Type`은 `text/event-stream`입니다.
+사용자·워크스페이스 조합별 60초 슬라이딩 윈도에서 12회를 초과하면 `429 CHAT_RATE_LIMITED`를 반환합니다.
 
 | 이벤트 | 데이터 |
 | --- | --- |

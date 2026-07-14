@@ -32,7 +32,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ work
     const admin = createAdminClient();
     const [membersResult, invitesResult] = await Promise.all([
       admin.from("workspace_members").select("user_id,role,created_at").eq("workspace_id", workspaceId).order("created_at"),
-      admin.from("workspace_invites").select("id,email,role,token,created_at").eq("workspace_id", workspaceId).is("accepted_at", null).order("created_at", { ascending: false }),
+      admin.from("workspace_invites").select("id,email,role,created_at").eq("workspace_id", workspaceId).is("accepted_at", null).order("created_at", { ascending: false }),
     ]);
     if (membersResult.error || invitesResult.error) throw new ApiError(500, "DATABASE_ERROR", "구성원 정보를 조회하지 못했습니다.");
     const members = await Promise.all((membersResult.data ?? []).map(async (item) => ({ ...item, ...(await accountSummary(item.user_id)) })));
