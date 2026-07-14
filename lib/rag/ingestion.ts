@@ -37,7 +37,7 @@ function parseError(result: unknown) {
 }
 
 function isNeedsOcr(value: unknown) {
-  const serialized = JSON.stringify(value).toUpperCase();
+  const serialized = JSON.stringify(value ?? "").toUpperCase();
   return serialized.includes("NEEDSOCR") || serialized.includes("NEEDS_OCR") || serialized.includes("IMAGE_BASED_PDF");
 }
 
