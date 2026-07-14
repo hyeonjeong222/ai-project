@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/onboard.css">
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<script src="assets/l-icon.js"></script>
+</helmet>
+
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+<main class="login-page" data-screen-label="로그인">
+  <section class="login-story">
+    <div class="brand-mark brand-mark-large"><l-icon name="bot" size="26"></l-icon></div>
+    <div>
+      <p class="eyebrow light">ONBOARD AI</p>
+      <h1>첫날의 질문을<br>회사의 지식으로 답합니다.</h1>
+      <p>검증된 사내 문서에서 근거를 찾고, 출처와 함께 빠르게 안내하는 온보딩 워크스페이스입니다.</p>
+    </div>
+    <div class="login-proof"><span>Private workspace</span><span>Source grounded</span><span>Secure by design</span></div>
+  </section>
+  <section class="login-panel">
+    <div class="login-card">
+      <nav class="login-role-links"><a class="{{ empRoleCls }}" onClick="{{ setEmployeeMode }}"><l-icon name="user-round" size="14"></l-icon>일반 사원 로그인</a><span>/</span><a class="{{ mgrRoleCls }}" onClick="{{ setManagerMode }}"><l-icon name="shield-check" size="14"></l-icon>회사 계정 로그인</a></nav>
+      <p class="eyebrow">{{ loginEyebrow }}</p>
+      <h2>{{ loginTitle }}</h2>
+      <p class="muted">{{ loginDesc }}</p>
+      <div class="form-stack">
+        <label class="field-label">이메일<span class="field-shell"><l-icon name="mail" size="17"></l-icon><input type="email" placeholder="name@company.com"></span></label>
+        <label class="field-label">비밀번호<span class="field-shell"><l-icon name="key-round" size="17"></l-icon><input type="password" placeholder="비밀번호"></span></label>
+        <button class="button primary wide" onClick="{{ signIn }}">로그인</button>
+      </div>
+      <div class="login-divider"><span>또는</span></div>
+      <button class="button secondary wide">이메일 로그인 링크 받기</button>
+      <p class="login-help">이메일 로그인 링크는 비밀번호 대신 이메일로 받은 1회용 로그인 링크로 접속하는 방식입니다. {{ loginHelp }}</p>
+    </div>
+  </section>
+</main>
+</sc-if>
+
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+<div class="product-shell">
+  <aside class="app-sidebar">
+    <div class="sidebar-brand"><div class="brand-mark"><l-icon name="bot" size="20"></l-icon></div><div><strong>Onboard AI</strong><span>KNOWLEDGE WORKSPACE</span></div></div>
+    <label class="workspace-select"><span>워크스페이스</span><div><select value="ws1" onChange="{{ noop }}"><option value="ws1">NOW AI</option></select><l-icon name="chevron-down" size="15"></l-icon></div></label>
+    <nav class="sidebar-nav">
+      <sc-for list="{{ empNav }}" as="n" hint-placeholder-count="2">
+        <a class="{{ n.cls }}" onClick="{{ n.go }}"><l-icon name="{{ n.icon }}" size="18"></l-icon><span>{{ n.label }}</span></a>
+      </sc-for>
+      <sc-if value="{{ showAdminNav }}" hint-placeholder-val="{{ true }}">
+        <p class="nav-section">ADMIN</p>
+        <sc-for list="{{ adminNav }}" as="n" hint-placeholder-count="7">
+          <a class="{{ n.cls }}" onClick="{{ n.go }}"><l-icon name="{{ n.icon }}" size="18"></l-icon><span>{{ n.label }}</span></a>
+        </sc-for>
+      </sc-if>
+    </nav>
+    <div class="sidebar-footer"><div class="user-avatar">D</div><div class="user-copy"><strong>dohyun.park</strong><span>ADMIN</span></div><button class="icon-button inverse" onClick="{{ signOut }}" aria-label="로그아웃"><l-icon name="log-out" size="18"></l-icon></button></div>
+  </aside>
+  <div class="product-main">
+
+  <sc-if value="{{ isChat }}" hint-placeholder-val="{{ true }}">
+  <main class="chat-workspace" data-screen-label="채팅">
+    <aside class="thread-rail">
+      <div class="thread-rail-header"><div><p class="eyebrow">CONVERSATIONS</p><h2>내 대화</h2></div><button class="icon-button" aria-label="대화 목록 닫기"><l-icon name="panel-left-close" size="18"></l-icon></button></div>
+      <button class="button primary wide" onClick="{{ newChat }}"><l-icon name="message-square-plus" size="17"></l-icon>새 대화</button>
+      <div class="thread-list">
+        <sc-for list="{{ threads }}" as="t" hint-placeholder-count="3">
+          <button class="{{ t.cls }}" onClick="{{ t.select }}"><strong>{{ t.title }}</strong><span>{{ t.preview }}</span><small>{{ t.meta }}</small></button>
+        </sc-for>
+      </div>
+    </aside>
+    <section class="chat-stage">
+      <header class="page-topbar chat-topbar">
+        <div class="topbar-title"><div><p class="eyebrow">EMPLOYEE ASSISTANT</p><h1>{{ activeThreadTitle }}</h1></div></div>
+        <a class="button secondary request-link" onClick="{{ goRequests }}"><l-icon name="clipboard-plus" size="16"></l-icon>문의 요청</a>
+      </header>
+      <div class="message-viewport">
+        <sc-if value="{{ showWelcome }}" hint-placeholder-val="{{ false }}">
+          <div class="chat-welcome">
+            <div class="welcome-orb"><l-icon name="sparkles" size="26"></l-icon></div>
+            <p class="eyebrow">SECURE EMPLOYEE ASSISTANT</p>
+            <h2>무엇을 확인해 드릴까요?</h2>
+            <p>등록된 매뉴얼을 기준으로 답합니다. 매뉴얼에 없는 내용은 담당자에게 직접 답변이나 문서 추가를 요청할 수 있습니다.</p>
+            <div class="suggestion-grid">
+              <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="4">
+                <button onClick="{{ s.ask }}"><span>{{ s.label }}</span><strong>{{ s.text }}</strong><l-icon name="arrow-right" size="17"></l-icon></button>
+              </sc-for>
+            </div>
+            <div class="ready-note"><l-icon name="check" size="15"></l-icon>매뉴얼 원문은 관리 담당자만 열람할 수 있습니다.</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ showMessages }}" hint-placeholder-val="{{ true }}">
+          <div class="messages-inner">
+            <sc-for list="{{ messages }}" as="m" hint-placeholder-count="4">
+              <article class="{{ m.rowCls }}">
+                <sc-if value="{{ m.isUser }}" hint-placeholder-val="{{ false }}"><div class="message-bubble user">{{ m.content }}</div></sc-if>
+                <sc-if value="{{ m.isAssistant }}" hint-placeholder-val="{{ true }}">
+                  <div class="assistant-avatar"><l-icon name="bot" size="17"></l-icon></div>
+                  <div class="assistant-stack">
+                    <div class="{{ m.bubbleCls }}">{{ m.content }}</div>
+                    <sc-if value="{{ m.hasCitations }}" hint-placeholder-val="{{ false }}">
+                      <div class="citation-stack">
+                        <sc-for list="{{ m.citations }}" as="c" hint-placeholder-count="1">
+                          <div class="citation-safe"><span class="citation-index">{{ c.index }}</span><span><strong>{{ c.title }}</strong><small>{{ c.meta }}</small></span></div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ m.showHumanLink }}" hint-placeholder-val="{{ false }}"><a class="human-answer-link" onClick="{{ goRequests }}">답변이 부족한가요? 담당자에게 직접 답변 요청</a></sc-if>
+                    <sc-if value="{{ m.showActions }}" hint-placeholder-val="{{ false }}">
+                      <div class="answer-actions"><span>도움이 되었나요?</span><button class="{{ m.upCls }}" onClick="{{ m.rateUp }}" aria-label="도움이 됐어요"><l-icon name="thumbs-up" size="14"></l-icon></button><button class="{{ m.downCls }}" onClick="{{ m.rateDown }}" aria-label="개선이 필요해요"><l-icon name="thumbs-down" size="14"></l-icon></button></div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+              </article>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div class="chat-composer">
+        <div class="composer-inner">
+          <textarea rows="1" maxLength="1000" placeholder="사내 규정이나 업무 절차를 질문하세요" value="{{ question }}" onChange="{{ onQuestion }}" onKeyDown="{{ onQuestionKey }}"></textarea>
+          <button disabled="{{ sendDisabled }}" onClick="{{ send }}" aria-label="질문 전송"><l-icon name="send" size="18"></l-icon></button>
+        </div>
+        <div class="composer-meta"><span><l-icon name="sparkles" size="13"></l-icon>등록된 매뉴얼을 기준으로 답합니다.</span><span>{{ qCount }}/1,000</span></div>
+      </div>
+    </section>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isRequests }}" hint-placeholder-val="{{ false }}">
+  <main class="request-page" data-screen-label="내 요청">
+    <header class="page-header"><div><p class="eyebrow">EMPLOYEE REQUEST DESK</p><h1>매뉴얼·답변 요청</h1><p>필요한 정보가 없거나 AI 답변만으로 부족하면 매뉴얼 관리 담당자에게 바로 요청하세요.</p></div></header>
+    <section class="request-layout">
+      <article class="panel request-form-card">
+        <div class="panel-header"><div><p class="eyebrow">NEW REQUEST</p><h2>무엇이 필요하신가요?</h2></div><l-icon name="clipboard-plus" size="21"></l-icon></div>
+        <div class="request-kind-grid">
+          <button type="button" class="{{ kindHumanCls }}" onClick="{{ pickHuman }}"><l-icon name="message-circle-question" size="18"></l-icon><strong>담당자 답변 요청</strong><span>챗봇이 답하기 어렵거나 정확한 확인이 필요한 내용을 담당자에게 전달합니다.</span></button>
+          <button type="button" class="{{ kindDocCls }}" onClick="{{ pickDoc }}"><l-icon name="file-plus-2" size="18"></l-icon><strong>매뉴얼 추가 요청</strong><span>현재 매뉴얼에 없는 정책·절차·안내 문서가 필요할 때 요청합니다.</span></button>
+        </div>
+        <div class="request-form">
+          <label class="field-label">요청 제목<input value="{{ reqSubject }}" onChange="{{ onReqSubject }}" maxLength="160" placeholder="{{ reqPlaceholder }}"></label>
+          <label class="field-label">상세 내용<textarea value="{{ reqContent }}" onChange="{{ onReqContent }}" maxLength="4000" rows="6" placeholder="상황, 확인하고 싶은 내용, 필요한 시점 등을 자세히 적어 주세요."></textarea></label>
+          <sc-if value="{{ reqNotice }}" hint-placeholder-val="{{ false }}"><p class="form-alert success">{{ reqNotice }}</p></sc-if>
+          <button class="button primary" disabled="{{ reqDisabled }}" onClick="{{ submitRequest }}"><l-icon name="send" size="16"></l-icon>{{ reqSubmitLabel }}</button>
+        </div>
+      </article>
+      <aside class="request-guide panel"><l-icon name="user-round" size="20"></l-icon><h2>담당자가 직접 확인합니다</h2><p>매뉴얼 원문은 안전하게 관리됩니다. 요청 내용과 답변은 본인에게만 표시됩니다.</p><ul><li><span>01</span>요청 접수</li><li><span>02</span>담당자 검토</li><li><span>03</span>답변 또는 문서 반영</li></ul></aside>
+    </section>
+    <section class="panel request-history">
+      <div class="panel-header"><div><p class="eyebrow">MY REQUESTS</p><h2>내 요청 내역</h2></div><span>{{ myRequestCount }}건</span></div>
+      <div class="request-list">
+        <sc-for list="{{ myRequests }}" as="r" hint-placeholder-count="2">
+          <article>
+            <header><span class="{{ r.kindCls }}">{{ r.kindLabel }}</span><span class="{{ r.statusCls }}">{{ r.statusLabel }}</span></header>
+            <h3>{{ r.subject }}</h3><p>{{ r.content }}</p>
+            <sc-if value="{{ r.response }}" hint-placeholder-val="{{ false }}">
+              <div class="human-response"><div><l-icon name="user-round" size="15"></l-icon><strong>담당자 답변</strong><small>{{ r.respondedAt }}</small></div><p>{{ r.response }}</p></div>
+            </sc-if>
+            <time>{{ r.createdAt }}</time>
+          </article>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}">
+  <div class="admin-page" data-screen-label="대시보드">
+    <header class="page-header"><div><p class="eyebrow">ADMIN OVERVIEW</p><h1>NOW AI 지식 운영</h1><p>문서 준비 상태와 직원 질문 품질을 한눈에 확인하세요.</p></div><button class="button secondary"><l-icon name="refresh-cw" size="16"></l-icon>새로고침</button></header>
+    <section class="metric-grid">
+      <sc-for list="{{ metrics }}" as="mt" hint-placeholder-count="4">
+        <article class="metric-card"><div class="{{ mt.iconCls }}"><l-icon name="{{ mt.icon }}" size="20"></l-icon></div><div><span>{{ mt.label }}</span><strong>{{ mt.value }}</strong><small>{{ mt.detail }}</small></div></article>
+      </sc-for>
+    </section>
+    <section class="dashboard-grid">
+      <article class="panel chart-panel">
+        <div class="panel-header"><div><p class="eyebrow">QUESTION FLOW</p><h2>최근 14일 질문 추이</h2></div><span class="data-chip"><l-icon name="clock-3" size="14"></l-icon>평균 412ms</span></div>
+        <div class="bar-chart">
+          <sc-for list="{{ daily }}" as="d" hint-placeholder-count="14">
+            <div class="bar-column"><div class="bar-track"><div class="bar unanswered" style="height: {{ d.hUn }}%"></div><div class="bar questions" style="height: {{ d.hQ }}%"></div></div><span>{{ d.day }}</span></div>
+          </sc-for>
+        </div>
+        <div class="chart-legend"><span><i class="blue"></i>근거 답변</span><span><i class="red"></i>답변 없음</span></div>
+      </article>
+      <article class="panel unanswered-panel">
+        <div class="panel-header"><div><p class="eyebrow">CONTENT GAPS</p><h2>최근 답변하지 못한 질문</h2></div><a class="text-link" onClick="{{ goHistory }}">전체 기록 <l-icon name="arrow-right" size="14"></l-icon></a></div>
+        <ul class="gap-list">
+          <sc-for list="{{ recentUnanswered }}" as="g" hint-placeholder-count="4">
+            <li><span class="alert-icon"><l-icon name="circle-alert" size="16"></l-icon></span><div><strong>{{ g.question }}</strong><small>{{ g.createdAt }}</small></div></li>
+          </sc-for>
+        </ul>
+      </article>
+    </section>
+    <section class="panel action-panel"><div><p class="eyebrow">NEXT ACTION</p><h2>문서를 최신 상태로 유지하세요</h2><p>READY 문서만 직원 답변에 사용되며 비활성 문서는 검색에서 자동 제외됩니다.</p></div><div><a class="button secondary" onClick="{{ goDocuments }}">문서 상태 보기</a><a class="button primary" onClick="{{ goUpload }}">새 문서 등록</a></div></section>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isDocuments }}" hint-placeholder-val="{{ false }}">
+  <div class="admin-page" data-screen-label="문서 관리">
+    <header class="page-header"><div><p class="eyebrow">KNOWLEDGE LIBRARY</p><h1>매뉴얼 관리</h1><p>AI 답변에 사용되는 회사 매뉴얼과 인덱싱 상태를 관리합니다.</p></div><a class="button primary" onClick="{{ goUpload }}"><l-icon name="file-plus-2" size="16"></l-icon>매뉴얼 업로드</a></header>
+    <section class="panel table-panel">
+      <div class="table-toolbar">
+        <label class="search-field"><l-icon name="search" size="17"></l-icon><input placeholder="문서 제목 검색" value="{{ docQuery }}" onChange="{{ onDocQuery }}"></label>
+        <label class="select-field"><l-icon name="filter" size="16"></l-icon><select value="{{ docStatus }}" onChange="{{ onDocStatus }}"><option value="">전체 상태</option><option value="READY">사용 가능</option><option value="QUEUED">분석 대기</option><option value="PARSING">분석 중</option><option value="FAILED">처리 실패</option><option value="NEEDS_OCR">OCR 필요</option></select></label>
+        <button class="button secondary"><l-icon name="refresh-cw" size="15"></l-icon>조회</button>
+      </div>
+      <div class="document-table">
+        <div class="table-head"><span>문서</span><span>분류/담당</span><span>처리 상태</span><span>검색 데이터</span><span>사용</span><span></span></div>
+        <sc-for list="{{ docs }}" as="doc" hint-placeholder-count="6">
+          <article class="document-row">
+            <div class="document-primary"><span class="file-icon"><l-icon name="file-text" size="19"></l-icon></span><div><a class="document-title-link">{{ doc.title }}</a><small>{{ doc.sub }}</small></div></div>
+            <div><span>{{ doc.category }}</span><small>{{ doc.department }}</small></div>
+            <div><span class="{{ doc.badgeCls }}">{{ doc.statusLabel }}</span><sc-if value="{{ doc.error }}" hint-placeholder-val="{{ false }}"><small class="error-copy">{{ doc.error }}</small></sc-if></div>
+            <div><span>{{ doc.chunks }}</span><small>{{ doc.pages }}</small></div>
+            <div><button class="{{ doc.toggleCls }}" onClick="{{ doc.toggle }}"><l-icon name="{{ doc.toggleIcon }}" size="29"></l-icon><span>{{ doc.toggleLabel }}</span></button></div>
+            <div class="document-actions"><a class="icon-button" onClick="{{ goUpload }}" aria-label="새 버전 업로드"><l-icon name="git-branch" size="17"></l-icon></a><button class="icon-button" aria-label="문서 보관"><l-icon name="archive" size="17"></l-icon></button></div>
+          </article>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isUpload }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="매뉴얼 업로드">
+    <sc-if value="{{ uploadIsChoose }}" hint-placeholder-val="{{ true }}">
+    <main class="admin-page upload-choice-page">
+      <header class="page-header"><div><p class="eyebrow">MANUAL FILE UPLOAD</p><h1>어떤 작업이 필요한가요?</h1><p>문서 내부 항목을 입력하지 않아도 됩니다. 매뉴얼 파일 전체를 올리면 제목·섹션·페이지 구조를 분석해 답변 근거로 사용합니다.</p></div><a class="button secondary" onClick="{{ goDocuments }}"><l-icon name="arrow-left" size="16"></l-icon>문서 목록</a></header>
+      <section class="upload-mode-grid">
+        <button type="button" class="panel upload-mode-card" onClick="{{ pickNewUpload }}"><span class="upload-mode-icon"><l-icon name="file-plus-2" size="25"></l-icon></span><p class="eyebrow">NEW MANUAL</p><h2>새 매뉴얼 등록</h2><p>신규 규정, 가이드, 온보딩 자료처럼 처음 등록하는 문서 파일을 올립니다.</p><strong>파일 선택으로 시작 <l-icon name="chevron-down" size="15"></l-icon></strong></button>
+        <button type="button" class="panel upload-mode-card" onClick="{{ pickReplaceUpload }}"><span class="upload-mode-icon replace"><l-icon name="git-branch" size="25"></l-icon></span><p class="eyebrow">UPDATE EXISTING</p><h2>기존 매뉴얼 최신본 교체</h2><p>개정된 전체 파일을 올리면 이전 버전은 새 버전이 준비될 때까지 계속 사용됩니다.</p><strong>기존 매뉴얼 선택 <l-icon name="chevron-down" size="15"></l-icon></strong></button>
+      </section>
+      <section class="upload-choice-note panel"><l-icon name="check" size="17"></l-icon><p><strong>안전한 버전 전환</strong> — 최신본 분석이 끝난 뒤에만 검색 대상이 바뀌므로, 업데이트 중에도 직원의 AI 답변은 중단되지 않습니다.</p></section>
+    </main>
+    </sc-if>
+    <sc-if value="{{ uploadIsForm }}" hint-placeholder-val="{{ false }}">
+    <div class="admin-page">
+      <header class="page-header"><div><p class="eyebrow">{{ uploadEyebrow }}</p><h1>{{ uploadTitle }}</h1><p>{{ uploadDesc }}</p></div><button class="button secondary" onClick="{{ resetUpload }}"><l-icon name="arrow-left" size="16"></l-icon>작업 선택으로</button></header>
+      <div class="upload-layout file-first-layout">
+        <div class="upload-main">
+          <sc-if value="{{ isReplacement }}" hint-placeholder-val="{{ false }}">
+            <section class="panel replacement-picker">
+              <div><p class="eyebrow">STEP 01</p><h2>교체할 매뉴얼 선택</h2><p>선택한 매뉴얼의 제목·분류·담당 정보는 그대로 이어집니다.</p></div>
+              <label class="field-label"><select value="{{ replacementId }}" onChange="{{ onReplacement }}"><option value="">기존 매뉴얼을 선택해 주세요</option><option value="d1">취업규칙 및 인사규정 · v3.2</option><option value="d2">경비·법인카드 사용 지침 · v2.1</option><option value="d3">재택·원격근무 가이드 · v1.4</option></select></label>
+            </section>
+          </sc-if>
+          <section class="panel form-section file-first-section">
+            <div class="section-heading"><span>{{ fileStepNo }}</span><div><h2>매뉴얼 파일</h2><p>전체 파일을 올리면 문서 구조와 페이지 정보를 자동 분석합니다.</p></div></div>
+            <sc-if value="{{ hasFile }}" hint-placeholder-val="{{ false }}">
+              <div class="selected-file"><div class="file-tile"><l-icon name="file-text" size="22"></l-icon></div><div><strong>{{ fileName }}</strong><span>{{ fileMeta }}</span></div><button type="button" class="icon-button" onClick="{{ clearFile }}" aria-label="파일 제거"><l-icon name="x" size="18"></l-icon></button></div>
+            </sc-if>
+            <sc-if value="{{ noFile }}" hint-placeholder-val="{{ true }}">
+              <div class="upload-dropzone" onClick="{{ pickFile }}"><span><l-icon name="upload-cloud" size="27"></l-icon></span><strong>매뉴얼 파일을 놓거나 클릭해 선택하세요</strong><p>HWP · HWPX · HWPML · PDF · XLS · XLSX · DOCX</p><small>파일당 최대 25MB</small></div>
+            </sc-if>
+          </section>
+          <details class="panel metadata-details">
+            <summary><span><strong>관리용 정보 보완</strong><small>선택 사항 · 직원에게는 원문이 공개되지 않습니다.</small></span><l-icon name="chevron-down" size="17"></l-icon></summary>
+            <div class="form-grid">
+              <label class="field-label span-2">매뉴얼 제목<input value="{{ uTitle }}" onChange="{{ onUTitle }}" placeholder="파일명에서 자동으로 제안됩니다"></label>
+              <label class="field-label">카테고리<select value="" onChange="{{ noop }}"><option value="">자동 분류 전/미지정</option><option>인사·휴가</option><option>비용·정산</option><option>법인카드</option><option>재택근무</option><option>출장</option><option>보안</option><option>IT·시스템</option><option>기타</option></select></label>
+              <label class="field-label">담당 부서<input placeholder="예: People팀"></label>
+              <label class="field-label">시행일<input type="date"></label>
+              <label class="field-label">표시 버전<input placeholder="1.0"></label>
+              <label class="field-label span-2">변경·설명 메모<textarea rows="3" placeholder="개정 이유나 문서의 용도를 기록할 수 있습니다."></textarea></label>
+              <label class="active-field span-2"><div><strong>분석 완료 후 답변에 사용</strong><span>활성 매뉴얼만 직원 질문의 근거로 사용됩니다.</span></div><input type="checkbox" defaultChecked="{{ true }}"><i></i></label>
+            </div>
+          </details>
+        </div>
+        <aside class="upload-summary panel">
+          <p class="eyebrow">FILE-FIRST CHECK</p>
+          <h2>{{ uploadCheckTitle }}</h2>
+          <ul>
+            <sc-for list="{{ checklist }}" as="ck" hint-placeholder-count="3">
+              <li class="{{ ck.cls }}"><span>{{ ck.no }}</span>{{ ck.label }}</li>
+            </sc-for>
+          </ul>
+          <div class="summary-note"><strong>자동 처리</strong><p>파일 업로드 → 텍스트·표 추출 → 섹션 분석 → 검색 데이터 생성 → 답변 반영</p></div>
+          <button class="button primary wide" disabled="{{ ingestDisabled }}" onClick="{{ startIngest }}">{{ ingestLabel }}</button>
+          <button type="button" class="button ghost wide" onClick="{{ resetUpload }}">취소</button>
+        </aside>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ uploadIsProgress }}" hint-placeholder-val="{{ false }}">
+    <div class="admin-page">
+      <header class="page-header"><div><p class="eyebrow">DOCUMENT INGESTION</p><h1>문서를 지식으로 변환하고 있습니다</h1><p>브라우저를 닫아도 서버에서 안전하게 처리가 이어집니다.</p></div></header>
+      <section class="panel progress-card">
+        <div class="progress-heading"><div><span class="spinner"></span><div><p>현재 단계</p><h2>{{ ingestStageLabel }}</h2></div></div><strong>{{ ingestPct }}%</strong></div>
+        <div class="progress-track"><span style="width: {{ ingestPct }}%"></span></div>
+        <ol class="ingestion-steps">
+          <sc-for list="{{ ingestSteps }}" as="st" hint-placeholder-count="6">
+            <li class="{{ st.cls }}"><span>{{ st.no }}</span><div><strong>{{ st.label }}</strong><small>{{ st.state }}</small></div></li>
+          </sc-for>
+        </ol>
+      </section>
+    </div>
+    </sc-if>
+    <sc-if value="{{ uploadIsComplete }}" hint-placeholder-val="{{ false }}">
+    <div class="admin-page">
+      <div class="completion-card"><div class="completion-icon"><l-icon name="check" size="28"></l-icon></div><p class="eyebrow">DOCUMENT READY</p><h1>새 매뉴얼이 답변 준비를 마쳤습니다</h1><p>문서 전체를 구조 분석하고 검색 데이터로 변환했습니다. 이제 직원 질문의 근거로 사용됩니다.</p><div><a class="button primary" onClick="{{ goDocuments }}">문서 목록 보기</a><button class="button secondary" onClick="{{ resetUpload }}"><l-icon name="rotate-ccw" size="16"></l-icon>다른 매뉴얼 등록</button></div></div>
+    </div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isInbox }}" hint-placeholder-val="{{ false }}">
+  <main class="admin-page request-inbox-page" data-screen-label="문의함">
+    <header class="page-header"><div><p class="eyebrow">MANUAL ADMIN DESK</p><h1>직원 문의함</h1><p>챗봇이 답하지 못한 질문은 직접 답변하고, 필요한 매뉴얼은 최신 문서로 보완하세요.</p></div></header>
+    <section class="inbox-summary">
+      <span><l-icon name="message-circle-question" size="16"></l-icon>사람 답변 요청 {{ humanOpenCount }}건</span>
+      <span><l-icon name="file-plus-2" size="16"></l-icon>문서 추가 요청 {{ docOpenCount }}건</span>
+    </section>
+    <section class="inbox-layout panel">
+      <aside class="inbox-list">
+        <header><strong>요청 목록</strong><span>{{ inboxCount }}</span></header>
+        <sc-for list="{{ inboxItems }}" as="q" hint-placeholder-count="4">
+          <button class="{{ q.cls }}" onClick="{{ q.select }}">
+            <div><span class="{{ q.kindCls }}">{{ q.kindLabel }}</span><span class="{{ q.statusCls }}">{{ q.statusLabel }}</span></div>
+            <strong>{{ q.subject }}</strong><small>{{ q.meta }}</small>
+          </button>
+        </sc-for>
+      </aside>
+      <article class="inbox-detail">
+        <header class="detail-user"><span class="history-avatar large">{{ inboxSelInitial }}</span><div><h2>{{ inboxSelName }}</h2><p>{{ inboxSelMeta }}</p></div><span class="{{ inboxSelKindCls }}">{{ inboxSelKindLabel }}</span></header>
+        <section class="request-original"><p class="eyebrow">REQUEST</p><h3>{{ inboxSelSubject }}</h3><p>{{ inboxSelContent }}</p></section>
+        <div class="admin-response-form">
+          <label class="field-label">처리 상태<select value="{{ inboxStatus }}" onChange="{{ onInboxStatus }}"><option value="OPEN">접수됨</option><option value="IN_PROGRESS">확인 중</option><option value="ANSWERED">답변 완료</option><option value="CLOSED">종료</option></select></label>
+          <label class="field-label">직원에게 보낼 답변<textarea rows="7" value="{{ inboxResponse }}" onChange="{{ onInboxResponse }}" placeholder="직원이 바로 확인할 수 있도록 사실과 다음 행동을 명확히 적어 주세요."></textarea></label>
+          <div class="response-actions"><p>{{ inboxHelp }}</p><button class="button primary" onClick="{{ saveInbox }}"><l-icon name="send" size="16"></l-icon>{{ inboxSaveLabel }}</button></div>
+        </div>
+        <sc-if value="{{ inboxHasPrevResponse }}" hint-placeholder-val="{{ false }}">
+          <div class="previous-response"><l-icon name="check-circle-2" size="16"></l-icon><span>이 요청에는 이미 답변이 등록되어 있습니다. 내용을 수정하면 최신 답변으로 갱신됩니다.</span></div>
+        </sc-if>
+      </article>
+    </section>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isHistory }}" hint-placeholder-val="{{ false }}">
+  <div class="admin-page history-page" data-screen-label="채팅 기록">
+    <header class="page-header"><div><p class="eyebrow">QUALITY REVIEW</p><h1>사용자 채팅 기록</h1><p>질문과 답변, 인용 문서, 만족도를 확인하고 콘텐츠 보완 사항을 기록하세요.</p></div></header>
+    <div class="history-search"><l-icon name="search" size="18"></l-icon><input placeholder="사용자, 이메일 또는 질문 검색"><button class="button secondary">검색</button></div>
+    <section class="history-layout panel">
+      <aside class="history-list">
+        <div class="history-list-title"><strong>채팅 목록</strong><span>{{ sessionCount }}</span></div>
+        <sc-for list="{{ sessions }}" as="ss" hint-placeholder-count="4">
+          <button class="{{ ss.cls }}" onClick="{{ ss.select }}">
+            <div><span class="history-avatar">{{ ss.initial }}</span><span><strong>{{ ss.name }}</strong><small>{{ ss.email }}</small></span><l-icon class="{{ ss.iconCls }}" name="{{ ss.iconName }}" size="17"></l-icon></div>
+            <p>{{ ss.question }}</p>
+            <footer><time>{{ ss.time }}</time><span>{{ ss.feedbackLabel }}</span></footer>
+          </button>
+        </sc-for>
+      </aside>
+      <article class="history-detail">
+        <header class="detail-user"><span class="history-avatar large">{{ selInitial }}</span><div><h2>{{ selName }}</h2><p>{{ selMeta }}</p></div><span class="{{ selBadgeCls }}">{{ selBadgeLabel }}</span></header>
+        <div class="review-conversation">
+          <sc-for list="{{ selMessages }}" as="rm" hint-placeholder-count="4">
+            <div class="{{ rm.rowCls }}">
+              <sc-if value="{{ rm.isAssistant }}" hint-placeholder-val="{{ false }}"><span class="assistant-avatar">AI</span></sc-if>
+              <div><p>{{ rm.content }}</p>
+                <sc-if value="{{ rm.hasCitations }}" hint-placeholder-val="{{ false }}">
+                  <div class="review-citations">
+                    <sc-for list="{{ rm.citations }}" as="rc" hint-placeholder-count="1">
+                      <button><l-icon name="file-text" size="16"></l-icon><span><strong>{{ rc.title }}</strong><small>{{ rc.page }}</small></span></button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <section class="admin-notes">
+          <div class="panel-header"><div><p class="eyebrow">PRIVATE ADMIN NOTES</p><h3>관리자 메모</h3></div><span>직원에게 표시되지 않음</span></div>
+          <sc-if value="{{ selHasNotes }}" hint-placeholder-val="{{ false }}">
+            <div class="note-history">
+              <sc-for list="{{ selNotes }}" as="nt" hint-placeholder-count="1"><p>{{ nt.content }}<small>{{ nt.date }}</small></p></sc-for>
+            </div>
+          </sc-if>
+          <div style="display:grid;justify-items:end;gap:8px;margin-top:12px"><textarea style="width:100%" value="{{ note }}" onChange="{{ onNote }}" placeholder="추가할 문서, 답변 검토 내용 또는 후속 조치를 기록하세요." rows="4"></textarea><button class="button primary" disabled="{{ noteDisabled }}" onClick="{{ saveNote }}"><l-icon name="save" size="15"></l-icon>메모 저장</button></div>
+        </section>
+      </article>
+    </section>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isAnalytics }}" hint-placeholder-val="{{ false }}">
+  <div class="admin-page" data-screen-label="질문 통계">
+    <header class="page-header"><div><p class="eyebrow">RAG QUALITY</p><h1>질문 통계</h1><p>직원 질문의 문서 커버리지와 검색 성능을 기준으로 지식 공백을 찾습니다.</p></div>
+      <div class="range-switch"><button class="{{ range7Cls }}" onClick="{{ setRange7 }}">7일</button><button class="{{ range30Cls }}" onClick="{{ setRange30 }}">30일</button><button class="{{ rangeAllCls }}" onClick="{{ setRangeAll }}">전체</button></div>
+    </header>
+    <section class="metric-grid analytics-metrics">
+      <sc-for list="{{ aMetrics }}" as="am" hint-placeholder-count="4">
+        <article class="metric-card analytic"><div class="metric-icon navy"><l-icon name="{{ am.icon }}" size="20"></l-icon></div><div><span>{{ am.label }}</span><strong>{{ am.value }}</strong><small>{{ am.note }}</small></div></article>
+      </sc-for>
+    </section>
+    <section class="analytics-grid">
+      <article class="panel analytics-chart">
+        <div class="panel-header"><div><p class="eyebrow">DAILY COVERAGE</p><h2>질문과 답변 실패 추이</h2></div><div class="chart-legend"><span><i class="blue"></i>전체 질문</span><span><i class="red"></i>근거 없음</span></div></div>
+        <div class="line-bars">
+          <sc-for list="{{ aDaily }}" as="ad" hint-placeholder-count="14">
+            <div><span class="bar-total" style="height: {{ ad.h }}%"><i style="height: {{ ad.ih }}%"></i></span><small>{{ ad.label }}</small></div>
+          </sc-for>
+        </div>
+      </article>
+      <article class="panel quality-card">
+        <p class="eyebrow">KNOWLEDGE HEALTH</p><h2>현재 지식 상태</h2>
+        <div class="coverage-ring" style="background: conic-gradient(var(--blue-600) {{ ringDeg }}deg, #e9eef4 0)"><div><strong>{{ coverage }}%</strong><span>coverage</span></div></div>
+        <ul>
+          <li><l-icon name="gauge" size="16"></l-icon><span>답변 준비 문서</span><strong>4/6</strong></li>
+          <li><l-icon name="circle-alert" size="16"></l-icon><span>보완 필요 질문</span><strong>{{ aUnanswered }}</strong></li>
+          <li><l-icon name="thumbs-up" size="16"></l-icon><span>사용자 만족도</span><strong>{{ aSatisfaction }}</strong></li>
+        </ul>
+      </article>
+    </section>
+    <section class="panel analytics-gaps">
+      <div class="panel-header"><div><p class="eyebrow">RECOMMENDED REVIEW</p><h2>우선 검토할 질문</h2></div></div>
+      <div>
+        <sc-for list="{{ gapRows }}" as="gr" hint-placeholder-count="4">
+          <article><span>{{ gr.no }}</span><div><strong>{{ gr.question }}</strong><small>{{ gr.createdAt }}</small></div><em>문서 보완 필요</em></article>
+        </sc-for>
+      </div>
+    </section>
+    <section class="usage-grid">
+      <article class="panel usage-panel">
+        <div class="panel-header"><div><p class="eyebrow">FAQ TOP 10</p><h2>자주 묻는 질문</h2></div></div>
+        <ol>
+          <sc-for list="{{ topQuestions }}" as="tq" hint-placeholder-count="6"><li><span>{{ tq.question }}</span><strong>{{ tq.count }}회</strong></li></sc-for>
+        </ol>
+      </article>
+      <article class="panel usage-panel">
+        <div class="panel-header"><div><p class="eyebrow">DOCUMENT USAGE</p><h2>문서별 인용 횟수</h2></div></div>
+        <ol>
+          <sc-for list="{{ docUsage }}" as="du" hint-placeholder-count="5"><li><span>{{ du.title }}<small>{{ du.category }}</small></span><strong>{{ du.count }}회</strong></li></sc-for>
+        </ol>
+      </article>
+    </section>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isCompany }}" hint-placeholder-val="{{ false }}">
+  <main class="admin-page company-page" data-screen-label="회사·구성원">
+    <header class="page-header"><div><p class="eyebrow">COMPANY WORKSPACE</p><h1>회사·구성원 관리</h1><p>회사마다 문서와 대화는 완전히 분리됩니다. 이곳에서 매뉴얼 관리자와 일반 구성원을 초대하세요.</p></div></header>
+    <section class="company-overview">
+      <article class="panel company-card"><span class="company-icon"><l-icon name="building-2" size="21"></l-icon></span><div><p class="eyebrow">COMPANY</p><h2>NOW AI</h2><p>독립된 회사 지식 워크스페이스</p></div></article>
+      <article class="panel company-card"><span class="company-icon"><l-icon name="users-round" size="21"></l-icon></span><div><p class="eyebrow">MEMBERS</p><h2>{{ memberCount }}명</h2><p>초대 대기 {{ inviteCount }}명</p></div></article>
+      <article class="panel company-card"><span class="company-icon"><l-icon name="shield-check" size="21"></l-icon></span><div><p class="eyebrow">DATA BOUNDARY</p><h2>회사별 격리</h2><p>문서·질문·요청이 다른 회사와 분리됩니다.</p></div></article>
+    </section>
+    <section class="company-layout">
+      <article class="panel invite-card">
+        <div class="panel-header"><div><p class="eyebrow">INVITE MEMBER</p><h2>구성원 초대</h2></div><l-icon name="mail-plus" size="21"></l-icon></div>
+        <p class="muted">초대 이메일을 등록하세요. 해당 계정으로 로그인하면 자동으로 이 회사 워크스페이스에 연결됩니다.</p>
+        <form>
+          <label class="field-label">회사 이메일<input type="email" value="{{ invEmail }}" onChange="{{ onInvEmail }}" placeholder="name@company.com"></label>
+          <label class="field-label">권한<select value="{{ invRole }}" onChange="{{ onInvRole }}"><option value="MEMBER">일반 구성원 — AI 질문과 요청만</option><option value="ADMIN">매뉴얼 관리자 — 문서·문의함 관리</option></select></label>
+          <sc-if value="{{ invNotice }}" hint-placeholder-val="{{ false }}"><p class="form-alert success">{{ invNotice }}</p></sc-if>
+          <button class="button primary" type="button" disabled="{{ invDisabled }}" onClick="{{ sendInvite }}"><l-icon name="mail-plus" size="16"></l-icon>초대 등록</button>
+        </form>
+      </article>
+      <aside class="company-role-guide panel"><p class="eyebrow">ROLE GUIDE</p><h2>권한은 최소한으로</h2><ul><li><l-icon name="shield-check" size="16"></l-icon><div><strong>회사 관리자</strong><span>구성원과 회사 설정을 관리합니다.</span></div></li><li><l-icon name="building-2" size="16"></l-icon><div><strong>매뉴얼 관리자</strong><span>문서 최신화와 직원 답변을 처리합니다.</span></div></li><li><l-icon name="user-round" size="16"></l-icon><div><strong>일반 구성원</strong><span>AI 질문과 사람 답변 요청을 사용합니다.</span></div></li></ul></aside>
+    </section>
+    <section class="panel member-list">
+      <div class="panel-header"><div><p class="eyebrow">ACTIVE MEMBERS</p><h2>현재 구성원</h2></div></div>
+      <sc-for list="{{ members }}" as="mb" hint-placeholder-count="4">
+        <article><span class="member-avatar">{{ mb.initial }}</span><div><strong>{{ mb.name }}</strong><small>{{ mb.email }}</small></div><span class="{{ mb.roleCls }}">{{ mb.roleLabel }}</span></article>
+      </sc-for>
+    </section>
+    <section class="panel pending-invites">
+      <div class="panel-header"><div><p class="eyebrow">PENDING INVITES</p><h2>로그인 대기 초대</h2></div><span>{{ inviteCount }}명</span></div>
+      <sc-for list="{{ invites }}" as="iv" hint-placeholder-count="2">
+        <article><l-icon name="mail-plus" size="16"></l-icon><span>{{ iv.email }}</span><strong>{{ iv.roleLabel }}</strong><small>{{ iv.date }}</small></article>
+      </sc-for>
+    </section>
+  </main>
+  </sc-if>
+
+  </div>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;ADMIN&quot;,&quot;options&quot;:[&quot;ADMIN&quot;,&quot;MEMBER&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;프로토타입&quot;}}">
+class Component extends DCLogic {
+  state = {
+    route: "chat",
+    // chat
+    activeThreadId: "t1", question: "",
+    threadsData: [
+      { id: "t1", title: "연차 신청 기한", preview: "연차휴가는 사용일 기준 최소 3영업일 전에…", meta: "오전 10:24 · 4개" },
+      { id: "t2", title: "법인카드 사용 한도", preview: "1회 30만 원을 초과하는 결제는 사전 품의가…", meta: "7. 12. · 2개" },
+      { id: "t3", title: "재택근무 신청 기준", preview: "등록된 매뉴얼에서 근거를 찾지 못했습니다.", meta: "7. 10. · 2개" },
+    ],
+    messagesByThread: {
+      t1: [
+        { id: "m1", role: "USER", content: "연차는 며칠 전에 신청해야 하나요?" },
+        { id: "m2", role: "ASSISTANT", content: "연차휴가는 사용일 기준 최소 3영업일 전에 전자결재로 신청해야 합니다.\n\n2일 이상 연속 사용 시 팀 일정 조율을 위해 1주 전 신청을 권장하며, 긴급한 사유가 있는 경우 팀장 승인으로 당일 신청도 가능합니다.", feedback: 1, citations: [{ title: "취업규칙 및 인사규정", meta: "제6장 휴가 › 연차휴가 · 42p" }] },
+        { id: "m3", role: "USER", content: "반차도 같은 기준인가요?" },
+        { id: "m4", role: "ASSISTANT", content: "반차는 사용일 전일 오후 6시까지 신청하면 됩니다. 오전 반차는 09:00–13:30, 오후 반차는 13:30–18:00 기준으로 처리됩니다.", feedback: null, citations: [{ title: "취업규칙 및 인사규정", meta: "제6장 휴가 › 반차 사용 기준 · 43p" }] },
+      ],
+      t2: [
+        { id: "m5", role: "USER", content: "법인카드는 어떤 경우에 사용할 수 있나요?" },
+        { id: "m6", role: "ASSISTANT", content: "법인카드는 업무 관련 비용에 한해 사용할 수 있습니다. 1회 30만 원을 초과하는 결제는 사전 품의가 필요하며, 접대비는 참석자 명단을 증빙에 첨부해야 합니다.", feedback: null, citations: [{ title: "경비·법인카드 사용 지침", meta: "제3장 사용 기준 › 한도와 증빙 · 12p" }] },
+      ],
+      t3: [
+        { id: "m7", role: "USER", content: "재택근무 시 카페 근무도 인정되나요?" },
+        { id: "m8", role: "ASSISTANT", content: "등록된 매뉴얼에서 해당 내용의 근거를 찾지 못했습니다. 재택·원격근무 가이드에는 근무 장소에 대한 세부 기준이 아직 포함되어 있지 않습니다.", feedback: -1, citations: [] },
+      ],
+    },
+    // requests
+    reqKind: "HUMAN_ANSWER", reqSubject: "", reqContent: "", reqNotice: "",
+    myRequests: [
+      { id: "q1", kind: "HUMAN_ANSWER", status: "ANSWERED", subject: "출장비 정산 예외 기준을 확인하고 싶어요", content: "해외 출장 중 개인 카드로 결제한 숙박비가 있는데, 규정상 예외 처리로 정산이 가능한지 확인이 필요합니다.", response: "개인 카드 결제분은 영수증과 사유서를 첨부하면 예외 정산이 가능합니다. 재무팀 정산 마감(매월 25일) 전에 제출해 주세요.", respondedAt: "2026. 7. 11. 오후 2:10", createdAt: "2026. 7. 10. 오전 9:32" },
+      { id: "q2", kind: "DOCUMENT_REQUEST", status: "OPEN", subject: "재택근무 장비 지원 매뉴얼이 필요해요", content: "모니터·의자 등 재택근무 장비 지원 기준이 매뉴얼에 없어 신청 절차를 알 수 없습니다.", response: null, respondedAt: "", createdAt: "2026. 7. 13. 오전 11:05" },
+    ],
+    // documents
+    docQuery: "", docStatus: "",
+    docs: [
+      { id: "d1", title: "취업규칙 및 인사규정", sub: "v3.2 · 취업규칙_2026_개정.pdf · 2.4 MB", category: "인사·휴가", department: "People팀", status: "READY", chunks: "214 chunks", pages: "86 pages", active: true, error: "" },
+      { id: "d2", title: "경비·법인카드 사용 지침", sub: "v2.1 · 경비지침_v2.1.hwpx · 1.1 MB", category: "비용·정산", department: "재무팀", status: "READY", chunks: "132 chunks", pages: "48 pages", active: true, error: "" },
+      { id: "d3", title: "재택·원격근무 가이드", sub: "v1.4 · 원격근무가이드.docx · 640 KB", category: "재택근무", department: "People팀", status: "EMBEDDING", chunks: "58 chunks", pages: "12 pages", active: true, error: "" },
+      { id: "d4", title: "정보보안 핸드북", sub: "v2.0 · 보안핸드북_스캔본.pdf · 8.2 MB", category: "보안", department: "보안팀", status: "NEEDS_OCR", chunks: "0 chunks", pages: "페이지 정보 없음", active: false, error: "이미지 PDF는 OCR 처리가 필요합니다." },
+      { id: "d5", title: "출장비 정산 매뉴얼", sub: "v1.0 · 출장정산_2025.xlsx · 380 KB", category: "출장", department: "재무팀", status: "FAILED", chunks: "0 chunks", pages: "페이지 정보 없음", active: false, error: "표 구조를 해석하지 못했습니다." },
+      { id: "d6", title: "신규 입사자 온보딩 체크리스트", sub: "v1.2 · 온보딩체크리스트.docx · 210 KB", category: "IT·시스템", department: "IT팀", status: "QUEUED", chunks: "0 chunks", pages: "분석 대기", active: true, error: "" },
+    ],
+    // upload
+    uploadMode: "choose", replacementId: "", hasFile: false, uTitle: "", ingestStage: "", uploadComplete: false,
+    // history
+    histSelected: "s1", note: "",
+    sessions: [
+      { id: "s1", name: "김하늘", email: "hanul.kim@nowai.kr", answerable: true, feedback: 1, time: "7. 14. 오전 10:24", question: "연차는 며칠 전에 신청해야 하나요?", meta: "hanul.kim@nowai.kr · 2026. 7. 14. 오전 10:24",
+        messages: [
+          { role: "USER", content: "연차는 며칠 전에 신청해야 하나요?" },
+          { role: "ASSISTANT", content: "연차휴가는 사용일 기준 최소 3영업일 전에 전자결재로 신청해야 합니다. 긴급한 경우 팀장 승인으로 당일 신청도 가능합니다.", citations: [{ title: "취업규칙 및 인사규정", page: "42 페이지" }] },
+        ], notes: [{ content: "연차 이월 조건을 FAQ 문서에 추가 예정", date: "2026. 7. 14. 오전 11:02" }] },
+      { id: "s2", name: "이준서", email: "junseo.lee@nowai.kr", answerable: false, feedback: -1, time: "7. 13. 오후 2:22", question: "경조사 지원금은 어떻게 신청하나요?", meta: "junseo.lee@nowai.kr · 2026. 7. 13. 오후 2:22",
+        messages: [
+          { role: "USER", content: "경조사 지원금은 어떻게 신청하나요?" },
+          { role: "ASSISTANT", content: "등록된 매뉴얼에서 경조사 지원금 신청 절차에 대한 근거를 찾지 못했습니다. 담당자에게 직접 답변을 요청하시거나 문서 추가를 요청해 주세요.", citations: [] },
+        ], notes: [] },
+      { id: "s3", name: "박서연", email: "seoyeon.park@nowai.kr", answerable: true, feedback: null, time: "7. 12. 오전 11:05", question: "법인카드 사용 한도가 궁금합니다", meta: "seoyeon.park@nowai.kr · 2026. 7. 12. 오전 11:05",
+        messages: [
+          { role: "USER", content: "법인카드 사용 한도가 궁금합니다" },
+          { role: "ASSISTANT", content: "1회 30만 원을 초과하는 결제는 사전 품의가 필요합니다. 월 한도는 직급별로 다르며 자세한 기준은 경비 지침 12페이지를 참고하세요.", citations: [{ title: "경비·법인카드 사용 지침", page: "12 페이지" }] },
+        ], notes: [] },
+      { id: "s4", name: "최민준", email: "minjun.choi@nowai.kr", answerable: false, feedback: null, time: "7. 11. 오후 4:40", question: "출장 시 렌터카 이용 규정이 있나요?", meta: "minjun.choi@nowai.kr · 2026. 7. 11. 오후 4:40",
+        messages: [
+          { role: "USER", content: "출장 시 렌터카 이용 규정이 있나요?" },
+          { role: "ASSISTANT", content: "등록된 매뉴얼에서 렌터카 이용 규정을 찾지 못했습니다. 출장비 정산 매뉴얼이 아직 분석되지 않아 근거로 사용할 수 없습니다.", citations: [] },
+        ], notes: [] },
+    ],
+    // inbox
+    inboxSelected: "r1", inboxStatus: "OPEN", inboxResponse: "",
+    inboxItems: [
+      { id: "r1", kind: "HUMAN_ANSWER", status: "OPEN", subject: "출장비 정산 예외 기준 확인 요청", name: "김하늘", email: "hanul.kim@nowai.kr", date: "2026. 7. 14.", createdAt: "2026. 7. 14. 오전 9:32", content: "해외 출장 중 개인 카드로 결제한 숙박비가 있습니다. 규정상 예외 처리로 정산이 가능한지, 필요한 증빙은 무엇인지 확인 부탁드립니다.", response: null },
+      { id: "r2", kind: "DOCUMENT_REQUEST", status: "IN_PROGRESS", subject: "경조사 지원 매뉴얼 추가 요청", name: "이준서", email: "junseo.lee@nowai.kr", date: "2026. 7. 13.", createdAt: "2026. 7. 13. 오후 2:30", content: "경조사 지원금 종류와 신청 절차가 매뉴얼에 없습니다. 챗봇이 답하지 못해 문서 추가를 요청합니다.", response: null },
+      { id: "r3", kind: "HUMAN_ANSWER", status: "ANSWERED", subject: "재택근무 장비 지원 문의", name: "박서연", email: "seoyeon.park@nowai.kr", date: "2026. 7. 12.", createdAt: "2026. 7. 12. 오전 10:15", content: "재택근무용 모니터 지원 신청이 가능한지 궁금합니다.", response: "모니터는 입사 1년 이상 구성원에게 1회 지원됩니다. IT팀 헬프데스크로 신청해 주세요." },
+      { id: "r4", kind: "DOCUMENT_REQUEST", status: "OPEN", subject: "보안 서약서 양식 요청", name: "최민준", email: "minjun.choi@nowai.kr", date: "2026. 7. 11.", createdAt: "2026. 7. 11. 오후 5:02", content: "외부 협력사 미팅용 보안 서약서 양식이 필요합니다.", response: null },
+    ],
+    // analytics
+    range: "30",
+    // company
+    invEmail: "", invRole: "MEMBER", invNotice: "",
+    invites: [
+      { email: "seoyeon.choi@nowai.kr", role: "MEMBER", date: "2026. 7. 12. 등록" },
+      { email: "minji.kang@nowai.kr", role: "ADMIN", date: "2026. 7. 14. 등록" },
+    ],
+    // login
+    managerMode: false,
+  };
+
+  daily = [
+    { day: "1", q: 18, un: 2 }, { day: "2", q: 24, un: 3 }, { day: "3", q: 21, un: 1 }, { day: "4", q: 26, un: 4 },
+    { day: "5", q: 19, un: 2 }, { day: "6", q: 9, un: 1 }, { day: "7", q: 7, un: 0 }, { day: "8", q: 28, un: 3 },
+    { day: "9", q: 31, un: 2 }, { day: "10", q: 25, un: 4 }, { day: "11", q: 29, un: 1 }, { day: "12", q: 22, un: 3 },
+    { day: "13", q: 12, un: 1 }, { day: "14", q: 8, un: 0 },
+  ];
+  statusMap = { UPLOADING: ["업로드 중", "neutral"], QUEUED: ["분석 대기", "blue"], PARSING: ["텍스트 추출", "blue"], CHUNKING: ["구조 분석", "blue"], EMBEDDING: ["검색 데이터 생성", "blue"], READY: ["사용 가능", "green"], FAILED: ["처리 실패", "red"], NEEDS_OCR: ["OCR 필요", "amber"] };
+  reqStatusMap = { OPEN: "접수됨", IN_PROGRESS: "확인 중", ANSWERED: "답변 완료", CLOSED: "종료" };
+  ingestOrder = ["UPLOADING", "QUEUED", "PARSING", "CHUNKING", "EMBEDDING", "READY"];
+  ingestLabels = { UPLOADING: "원본 파일 업로드", QUEUED: "문서 분석 대기", PARSING: "텍스트와 표 추출", CHUNKING: "문서 구조 분석", EMBEDDING: "검색 데이터 생성", READY: "등록 완료" };
+  ingestPcts = { UPLOADING: 15, QUEUED: 35, PARSING: 50, CHUNKING: 67, EMBEDDING: 84, READY: 100 };
+  ranges = {
+    "7": { questions: "168", coverage: 92, satisfaction: "88%", active: "23", answered: "155건 근거 답변", un: "13" },
+    "30": { questions: "342", coverage: 91, satisfaction: "87%", active: "41", answered: "311건 근거 답변", un: "31" },
+    "all": { questions: "1,289", coverage: 89, satisfaction: "86%", active: "68", answered: "1,147건 근거 답변", un: "142" },
+  };
+
+  go(route) { this.setState({ route }); }
+
+  sendQuestion(text) {
+    const content = (text || "").trim();
+    if (!content) return;
+    let threadId = this.state.activeThreadId;
+    const byThread = { ...this.state.messagesByThread };
+    let threads = this.state.threadsData;
+    if (!threadId) {
+      threadId = "t" + Date.now();
+      byThread[threadId] = [];
+      threads = [{ id: threadId, title: content.slice(0, 24), preview: content, meta: "방금 · 1개" }, ...threads];
+    }
+    const uid = "u" + Date.now(), aid = "a" + Date.now();
+    byThread[threadId] = [...(byThread[threadId] || []),
+      { id: uid, role: "USER", content },
+      { id: aid, role: "ASSISTANT", content: "", pending: true, feedback: null, citations: [] }];
+    this.setState({ messagesByThread: byThread, threadsData: threads, activeThreadId: threadId, question: "" });
+    setTimeout(() => {
+      this.setState((s) => {
+        const list = (s.messagesByThread[threadId] || []).map((m) => m.id === aid ? { ...m, pending: false, content: "등록된 매뉴얼을 기준으로 안내드립니다.\n\n문의하신 내용은 취업규칙 및 인사규정 제6장에서 확인할 수 있으며, 세부 기준은 아래 근거 문서를 참고해 주세요.", citations: [{ title: "취업규칙 및 인사규정", meta: "제6장 휴가 › 신청 절차 · 42p" }] } : m);
+        return { messagesByThread: { ...s.messagesByThread, [threadId]: list } };
+      });
+    }, 900);
+  }
+
+  rate(threadId, id, val) {
+    this.setState((s) => {
+      const list = (s.messagesByThread[threadId] || []).map((m) => m.id === id ? { ...m, feedback: m.feedback === val ? null : val } : m);
+      return { messagesByThread: { ...s.messagesByThread, [threadId]: list } };
+    });
+  }
+
+  startIngestTimer() {
+    const advance = () => {
+      this.setState((s) => {
+        const i = this.ingestOrder.indexOf(s.ingestStage);
+        if (i < 0) return {};
+        if (this.ingestOrder[i] === "READY") return {};
+        const next = this.ingestOrder[i + 1];
+        if (next === "READY") { setTimeout(() => this.setState({ ingestStage: "", uploadComplete: true }), 900); return { ingestStage: "READY" }; }
+        return { ingestStage: next };
+      });
+      if (this.state.ingestStage && this.state.ingestStage !== "READY") this._t = setTimeout(advance, 1000);
+    };
+    this._t = setTimeout(advance, 1000);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const route = s.route;
+    const nav = (r, label, icon) => ({ label, icon, cls: route === r ? "active" : "", go: () => this.go(r) });
+
+    // chat
+    const threads = s.threadsData.map((t) => ({ ...t, cls: "thread-item" + (t.id === s.activeThreadId ? " active" : ""), select: () => this.setState({ activeThreadId: t.id }) }));
+    const activeThread = s.threadsData.find((t) => t.id === s.activeThreadId);
+    const rawMessages = s.activeThreadId ? (s.messagesByThread[s.activeThreadId] || []) : [];
+    const messages = rawMessages.map((m) => {
+      const isUser = m.role === "USER";
+      return {
+        ...m, isUser, isAssistant: !isUser,
+        rowCls: "message-row " + (isUser ? "user" : "assistant"),
+        bubbleCls: "message-bubble assistant" + (m.pending ? " streaming" : ""),
+        content: m.pending && !m.content ? "답변을 작성하는 중…" : m.content,
+        citations: (m.citations || []).map((c, i) => ({ ...c, index: i + 1 })),
+        hasCitations: (m.citations || []).length > 0,
+        showHumanLink: !isUser && !m.pending && (m.citations || []).length === 0,
+        showActions: !isUser && !m.pending,
+        upCls: m.feedback === 1 ? "selected" : "",
+        downCls: m.feedback === -1 ? "selected negative" : "",
+        rateUp: () => this.rate(s.activeThreadId, m.id, 1),
+        rateDown: () => this.rate(s.activeThreadId, m.id, -1),
+      };
+    });
+    const suggestions = [["연차·휴가", "연차는 며칠 전에 신청해야 하나요?"], ["법인카드", "법인카드는 어떤 경우에 사용할 수 있나요?"], ["출장·정산", "출장비 정산 절차와 기한을 알려주세요."], ["재택근무", "재택근무 신청 기준이 있나요?"]].map(([label, text]) => ({ label, text, ask: () => this.sendQuestion(text) }));
+
+    // requests
+    const kindLabel = s.reqKind === "HUMAN_ANSWER" ? "담당자 답변 요청" : "매뉴얼 추가 요청";
+    const myRequests = s.myRequests.map((r) => ({
+      ...r,
+      kindCls: "request-kind " + r.kind.toLowerCase(),
+      kindLabel: r.kind === "HUMAN_ANSWER" ? "담당자 답변 요청" : "매뉴얼 추가 요청",
+      statusCls: "request-status " + r.status.toLowerCase(),
+      statusLabel: this.reqStatusMap[r.status],
+    }));
+
+    // dashboard
+    const max = Math.max(...this.daily.map((d) => d.q), 1);
+    const daily = this.daily.map((d) => ({ day: d.day, hUn: Math.round(d.un / max * 100), hQ: Math.max(d.q ? 8 : 0, Math.round((d.q - d.un) / max * 100)) }));
+    const recentUnanswered = [
+      { question: "경조사 지원금은 어떻게 신청하나요?", createdAt: "2026. 7. 13. 오후 2:22" },
+      { question: "출장 시 렌터카 이용 규정이 있나요?", createdAt: "2026. 7. 11. 오후 4:40" },
+      { question: "자녀 학자금 지원 제도가 있나요?", createdAt: "2026. 7. 11. 오전 9:12" },
+      { question: "동호회 활동비 지원 기준이 궁금합니다", createdAt: "2026. 7. 10. 오전 9:18" },
+    ];
+
+    // documents
+    const docs = s.docs.map((d) => {
+      const st = this.statusMap[d.status];
+      return {
+        ...d,
+        badgeCls: "status-badge " + st[1], statusLabel: st[0],
+        toggleCls: "toggle-button" + (d.active ? " on" : ""),
+        toggleIcon: d.active ? "toggle-right" : "toggle-left",
+        toggleLabel: d.active ? "활성" : "비활성",
+        toggle: () => this.setState((cur) => ({ docs: cur.docs.map((x) => x.id === d.id ? { ...x, active: !x.active } : x) })),
+      };
+    });
+
+    // upload
+    const isReplacement = s.uploadMode === "replace";
+    const checklist = [
+      { no: "1", label: isReplacement ? (s.replacementId ? "취업규칙 및 인사규정" : "교체할 매뉴얼 선택") : "새 매뉴얼로 등록", ok: !isReplacement || Boolean(s.replacementId) },
+      { no: "2", label: "지원되는 원본 파일", ok: s.hasFile },
+      { no: "3", label: "파일명 기반 제목", ok: Boolean(s.uTitle) },
+    ].map((c) => ({ ...c, cls: c.ok ? "ready" : "", no: c.ok ? "✓" : c.no }));
+    const stageIdx = this.ingestOrder.indexOf(s.ingestStage);
+    const ingestSteps = this.ingestOrder.map((st, i) => ({
+      no: i < stageIdx ? "✓" : String(i + 1),
+      label: this.ingestLabels[st],
+      state: i < stageIdx ? "완료" : i === stageIdx ? "진행 중" : "대기",
+      cls: i < stageIdx ? "done" : i === stageIdx ? "current" : "",
+    }));
+
+    // history
+    const sessions = s.sessions.map((ss) => ({
+      ...ss,
+      cls: ss.id === s.histSelected ? "active" : "",
+      initial: ss.name.slice(0, 1),
+      iconCls: ss.answerable ? "success-icon" : "danger-icon",
+      iconName: ss.answerable ? "check-circle-2" : "circle-alert",
+      feedbackLabel: ss.feedback === 1 ? "만족" : ss.feedback === -1 ? "불만족" : "미평가",
+      select: () => this.setState({ histSelected: ss.id, note: "" }),
+    }));
+    const sel = s.sessions.find((x) => x.id === s.histSelected) || s.sessions[0];
+    const selMessages = sel.messages.map((m, i) => ({
+      ...m, key: i,
+      isAssistant: m.role === "ASSISTANT",
+      rowCls: "review-message " + m.role.toLowerCase(),
+      hasCitations: (m.citations || []).length > 0,
+      citations: m.citations || [],
+    }));
+
+    // inbox
+    const inboxItems = s.inboxItems.map((q) => ({
+      ...q,
+      cls: q.id === s.inboxSelected ? "active" : "",
+      kindCls: "request-kind " + q.kind.toLowerCase(),
+      kindLabel: q.kind === "HUMAN_ANSWER" ? "사람 답변" : "문서 추가",
+      statusCls: "request-status " + q.status.toLowerCase(),
+      statusLabel: this.reqStatusMap[q.status],
+      meta: q.name + " · " + q.date,
+      select: () => this.setState({ inboxSelected: q.id, inboxStatus: q.status, inboxResponse: q.response || "" }),
+    }));
+    const inboxSel = s.inboxItems.find((x) => x.id === s.inboxSelected) || s.inboxItems[0];
+
+    // analytics
+    const rg = this.ranges[s.range];
+    const aMax = Math.max(...this.daily.map((d) => d.q), 1);
+    const aDaily = this.daily.map((d) => ({ h: Math.max(d.q ? 10 : 0, Math.round(d.q / aMax * 100)), ih: d.q ? Math.round(d.un / d.q * 100) : 0, label: "7. " + d.day + "." }));
+    const rangeCls = (v) => s.range === v ? "active" : "";
+
+    // company
+    const roleNames = { OWNER: "회사 관리자", ADMIN: "매뉴얼 관리자", MEMBER: "일반 구성원" };
+    const members = [
+      { name: "김지원", email: "jiwon.kim@nowai.kr", role: "OWNER" },
+      { name: "박도현", email: "dohyun.park@nowai.kr", role: "ADMIN" },
+      { name: "김하늘", email: "hanul.kim@nowai.kr", role: "MEMBER" },
+      { name: "이준서", email: "junseo.lee@nowai.kr", role: "MEMBER" },
+    ].map((m) => ({ ...m, initial: m.name.slice(0, 1), roleCls: "member-role " + m.role.toLowerCase(), roleLabel: roleNames[m.role] }));
+
+    return {
+      noop: () => {},
+      isLogin: route === "login", isApp: route !== "login",
+      isChat: route === "chat", isRequests: route === "requests", isDashboard: route === "admin",
+      isDocuments: route === "documents", isUpload: route === "upload", isInbox: route === "inbox",
+      isHistory: route === "history", isAnalytics: route === "analytics", isCompany: route === "company",
+      empNav: [nav("chat", "AI에게 질문", "message-square-text"), nav("requests", "내 요청", "clipboard-list")],
+      adminNav: [nav("admin", "대시보드", "layout-dashboard"), nav("documents", "문서 관리", "files"), nav("upload", "최신 매뉴얼 업로드", "file-plus-2"), nav("inbox", "문의함", "clipboard-list"), nav("history", "채팅 기록", "message-square-text"), nav("analytics", "질문 통계", "bar-chart-3"), nav("company", "회사·구성원", "building-2")],
+      showAdminNav: (this.props.role ?? "ADMIN") === "ADMIN",
+      signOut: () => this.go("login"),
+      goRequests: () => this.go("requests"), goDocuments: () => this.go("documents"),
+      goUpload: () => { this.setState({ uploadMode: "choose", hasFile: false, uTitle: "", ingestStage: "", uploadComplete: false }); this.go("upload"); },
+      goHistory: () => this.go("history"),
+      // login
+      empRoleCls: !s.managerMode ? "active employee" : "", mgrRoleCls: s.managerMode ? "active manager" : "",
+      setEmployeeMode: () => this.setState({ managerMode: false }), setManagerMode: () => this.setState({ managerMode: true }),
+      loginEyebrow: s.managerMode ? "MANUAL ADMIN SIGN IN" : "EMPLOYEE SIGN IN",
+      loginTitle: s.managerMode ? "관리자 계정으로 시작하기" : "회사 계정으로 시작하기",
+      loginDesc: s.managerMode ? "문서 최신화와 직원 문의 처리는 지정된 매뉴얼 관리 담당자만 할 수 있습니다." : "AI에게 질문하거나, 필요한 매뉴얼과 사람 답변을 요청할 수 있습니다.",
+      loginHelp: s.managerMode ? "관리자 권한이 없으면 직원 화면으로만 접근할 수 있습니다." : "계정이 없다면 회사 관리자에게 초대를 요청하세요.",
+      signIn: () => this.go(s.managerMode ? "admin" : "chat"),
+      // chat
+      threads, messages, suggestions,
+      activeThreadTitle: activeThread ? activeThread.title : "새 대화",
+      showWelcome: messages.length === 0, showMessages: messages.length > 0,
+      newChat: () => this.setState({ activeThreadId: null }),
+      question: s.question, qCount: s.question.length,
+      onQuestion: (e) => this.setState({ question: e.target.value }),
+      onQuestionKey: (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); this.sendQuestion(this.state.question); } },
+      sendDisabled: !s.question.trim(), send: () => this.sendQuestion(s.question),
+      // requests
+      kindHumanCls: s.reqKind === "HUMAN_ANSWER" ? "active" : "", kindDocCls: s.reqKind === "DOCUMENT_REQUEST" ? "active" : "",
+      pickHuman: () => this.setState({ reqKind: "HUMAN_ANSWER" }), pickDoc: () => this.setState({ reqKind: "DOCUMENT_REQUEST" }),
+      reqSubject: s.reqSubject, reqContent: s.reqContent, reqNotice: s.reqNotice,
+      reqPlaceholder: s.reqKind === "HUMAN_ANSWER" ? "예: 출장비 정산 예외 기준을 확인하고 싶어요" : "예: 재택근무 장비 지원 매뉴얼이 필요해요",
+      onReqSubject: (e) => this.setState({ reqSubject: e.target.value }), onReqContent: (e) => this.setState({ reqContent: e.target.value }),
+      reqDisabled: !s.reqSubject.trim() || !s.reqContent.trim(),
+      reqSubmitLabel: kindLabel + " 보내기",
+      submitRequest: () => {
+        const item = { id: "q" + Date.now(), kind: s.reqKind, status: "OPEN", subject: s.reqSubject.trim(), content: s.reqContent.trim(), response: null, respondedAt: "", createdAt: "2026. 7. 14. 오후 3:00" };
+        this.setState({ myRequests: [item, ...s.myRequests], reqSubject: "", reqContent: "", reqNotice: "요청이 접수되었습니다. 담당자가 확인 후 이 화면에 답변을 남깁니다." });
+      },
+      myRequests, myRequestCount: s.myRequests.length,
+      // dashboard
+      metrics: [
+        { icon: "files", iconCls: "metric-icon blue", label: "등록 문서", value: "6", detail: "4개 답변 준비 완료" },
+        { icon: "message-square-text", iconCls: "metric-icon navy", label: "최근 30일 질문", value: "342", detail: "57개 대화에서 수집" },
+        { icon: "file-check-2", iconCls: "metric-icon green", label: "근거 답변률", value: "91%", detail: "31건 근거 확인 필요" },
+        { icon: "thumbs-up", iconCls: "metric-icon amber", label: "답변 만족도", value: "87%", detail: "평가가 저장된 답변 기준" },
+      ],
+      daily, recentUnanswered,
+      // documents
+      docs, docQuery: s.docQuery, docStatus: s.docStatus,
+      onDocQuery: (e) => this.setState({ docQuery: e.target.value }), onDocStatus: (e) => this.setState({ docStatus: e.target.value }),
+      // upload
+      uploadIsChoose: s.uploadMode === "choose" && !s.ingestStage && !s.uploadComplete,
+      uploadIsForm: (s.uploadMode === "new" || s.uploadMode === "replace") && !s.ingestStage && !s.uploadComplete,
+      uploadIsProgress: Boolean(s.ingestStage), uploadIsComplete: s.uploadComplete,
+      isReplacement,
+      uploadEyebrow: isReplacement ? "UPDATE EXISTING MANUAL" : "NEW MANUAL",
+      uploadTitle: isReplacement ? "기존 매뉴얼 최신본 교체" : "새 매뉴얼 파일 등록",
+      uploadDesc: isReplacement ? "개정된 전체 파일만 올리면 됩니다. 새 버전이 준비될 때까지 기존 답변은 안전하게 유지됩니다." : "파일을 먼저 올리고, 필요할 때만 매뉴얼 관리 정보를 보완하세요.",
+      uploadCheckTitle: isReplacement ? "최신본 교체 확인" : "새 매뉴얼 등록 확인",
+      pickNewUpload: () => this.setState({ uploadMode: "new" }), pickReplaceUpload: () => this.setState({ uploadMode: "replace" }),
+      resetUpload: () => { if (this._t) clearTimeout(this._t); this.setState({ uploadMode: "choose", replacementId: "", hasFile: false, uTitle: "", ingestStage: "", uploadComplete: false }); },
+      replacementId: s.replacementId, onReplacement: (e) => this.setState({ replacementId: e.target.value }),
+      fileStepNo: isReplacement ? "02" : "01",
+      hasFile: s.hasFile, noFile: !s.hasFile,
+      fileName: "복리후생_규정_2026.pdf", fileMeta: "1.6 MB · PDF",
+      pickFile: () => this.setState({ hasFile: true, uTitle: "복리후생 규정 2026" }),
+      clearFile: () => this.setState({ hasFile: false, uTitle: "" }),
+      uTitle: s.uTitle, onUTitle: (e) => this.setState({ uTitle: e.target.value }),
+      checklist,
+      ingestDisabled: !s.hasFile || (isReplacement && !s.replacementId),
+      ingestLabel: isReplacement ? "최신본 업로드 및 분석" : "매뉴얼 업로드 및 분석",
+      startIngest: () => { this.setState({ ingestStage: "UPLOADING" }); this.startIngestTimer(); },
+      ingestStageLabel: this.ingestLabels[s.ingestStage] || "", ingestPct: this.ingestPcts[s.ingestStage] || 0,
+      ingestSteps,
+      // history
+      sessions, sessionCount: s.sessions.length,
+      selInitial: sel.name.slice(0, 1), selName: sel.name, selMeta: sel.meta,
+      selBadgeCls: "status-badge " + (sel.answerable ? "green" : "red"), selBadgeLabel: sel.answerable ? "근거 답변" : "답변 실패",
+      selMessages, selNotes: sel.notes, selHasNotes: sel.notes.length > 0,
+      note: s.note, onNote: (e) => this.setState({ note: e.target.value }), noteDisabled: !s.note.trim(),
+      saveNote: () => {
+        if (!s.note.trim()) return;
+        this.setState({ sessions: s.sessions.map((x) => x.id === sel.id ? { ...x, notes: [...x.notes, { content: s.note.trim(), date: "2026. 7. 14. 오후 3:12" }] } : x), note: "" });
+      },
+      // inbox
+      inboxItems, inboxCount: s.inboxItems.length,
+      humanOpenCount: s.inboxItems.filter((x) => x.kind === "HUMAN_ANSWER" && x.status !== "ANSWERED").length,
+      docOpenCount: s.inboxItems.filter((x) => x.kind === "DOCUMENT_REQUEST" && x.status !== "CLOSED").length,
+      inboxSelInitial: inboxSel.name.slice(0, 1), inboxSelName: inboxSel.name,
+      inboxSelMeta: inboxSel.email + " · " + inboxSel.createdAt,
+      inboxSelKindCls: "request-kind " + inboxSel.kind.toLowerCase(),
+      inboxSelKindLabel: inboxSel.kind === "HUMAN_ANSWER" ? "사람 답변" : "문서 추가",
+      inboxSelSubject: inboxSel.subject, inboxSelContent: inboxSel.content,
+      inboxStatus: s.inboxStatus, onInboxStatus: (e) => this.setState({ inboxStatus: e.target.value }),
+      inboxResponse: s.inboxResponse, onInboxResponse: (e) => this.setState({ inboxResponse: e.target.value }),
+      inboxHelp: s.inboxStatus === "ANSWERED" ? "답변 완료로 처리하면 직원의 ‘내 요청’ 화면에 바로 표시됩니다." : "답변 없이도 상태만 변경할 수 있습니다.",
+      inboxSaveLabel: s.inboxStatus === "ANSWERED" ? "답변 보내기" : "상태 저장",
+      inboxHasPrevResponse: Boolean(inboxSel.response),
+      saveInbox: () => this.setState({ inboxItems: s.inboxItems.map((x) => x.id === inboxSel.id ? { ...x, status: s.inboxStatus, response: s.inboxResponse.trim() || x.response } : x) }),
+      // analytics
+      range7Cls: rangeCls("7"), range30Cls: rangeCls("30"), rangeAllCls: rangeCls("all"),
+      setRange7: () => this.setState({ range: "7" }), setRange30: () => this.setState({ range: "30" }), setRangeAll: () => this.setState({ range: "all" }),
+      aMetrics: [
+        { icon: "message-square-text", label: "전체 질문", value: rg.questions, note: "retrieval 실행 기준" },
+        { icon: "target", label: "문서 커버리지", value: rg.coverage + "%", note: rg.answered },
+        { icon: "thumbs-up", label: "만족도", value: rg.satisfaction, note: "응답 평가 기준" },
+        { icon: "users", label: "활성 사용자", value: rg.active, note: "기간 내 대화 사용자" },
+      ],
+      aDaily, coverage: rg.coverage, ringDeg: rg.coverage * 3.6,
+      aUnanswered: rg.un, aSatisfaction: rg.satisfaction,
+      gapRows: recentUnanswered.map((g, i) => ({ ...g, no: String(i + 1).padStart(2, "0") })),
+      topQuestions: [
+        { question: "연차는 며칠 전에 신청해야 하나요?", count: 42 }, { question: "법인카드 사용 한도가 궁금합니다", count: 31 },
+        { question: "재택근무 신청 기준이 있나요?", count: 27 }, { question: "출장비 정산 절차를 알려주세요", count: 22 },
+        { question: "경조 휴가는 며칠인가요?", count: 18 }, { question: "건강검진 지원 대상이 궁금합니다", count: 14 },
+      ],
+      docUsage: [
+        { title: "취업규칙 및 인사규정", category: "인사·휴가", count: 168 }, { title: "경비·법인카드 사용 지침", category: "비용·정산", count: 94 },
+        { title: "재택·원격근무 가이드", category: "재택근무", count: 61 }, { title: "출장비 정산 매뉴얼", category: "출장", count: 38 },
+        { title: "정보보안 핸드북", category: "보안", count: 12 },
+      ],
+      // company
+      members, memberCount: members.length,
+      invites: s.invites.map((iv) => ({ ...iv, roleLabel: roleNames[iv.role] })), inviteCount: s.invites.length,
+      invEmail: s.invEmail, onInvEmail: (e) => this.setState({ invEmail: e.target.value }),
+      invRole: s.invRole, onInvRole: (e) => this.setState({ invRole: e.target.value }),
+      invDisabled: !s.invEmail.trim(), invNotice: s.invNotice,
+      sendInvite: () => this.setState({ invites: [...s.invites, { email: s.invEmail.trim(), role: s.invRole, date: "2026. 7. 14. 등록" }], invEmail: "", invNotice: "초대를 등록했습니다. 초대받은 구성원이 해당 이메일로 로그인하면 자동으로 이 회사에 합류합니다." }),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,5 +1,3 @@
-import "server-only";
-
 import { performance } from "node:perf_hooks";
 
 import { maximalMarginalRelevance, reciprocalRankFusion, type RawRetrievalHit } from "@/lib/rag/ranking";
@@ -7,6 +5,16 @@ import { embedTexts, getOpenAI } from "@/lib/rag/openai";
 import { ApiError } from "@/lib/server/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerEnv } from "@/lib/config/env";
+
+function compactSupabaseError(error: { message: string; code?: string; details?: string; hint?: string } | null) {
+  if (!error) return null;
+  return {
+    code: error.code,
+    message: error.message,
+    details: error.details,
+    hint: error.hint,
+  };
+}
 
 export async function validateDocumentFilters(workspaceId: string, documentIds: string[]) {
   if (!documentIds.length) return;
@@ -64,7 +72,12 @@ export async function retrieveEvidence(input: {
     }),
   ]);
   if (vectorResult.error || lexicalResult.error) {
-    throw new ApiError(500, "RETRIEVAL_ERROR", "문서 검색에 실패했습니다.");
+    const details = {
+      vector: compactSupabaseError(vectorResult.error),
+      lexical: compactSupabaseError(lexicalResult.error),
+    };
+    console.error("Retrieval RPC failed", JSON.stringify(details));
+    throw new ApiError(500, "RETRIEVAL_ERROR", "문서 검색에 실패했습니다. 잠시 후 다시 시도하거나 관리자에게 문의해 주세요.", details);
   }
 
   const vectorHits = (vectorResult.data ?? []) as RawRetrievalHit[];

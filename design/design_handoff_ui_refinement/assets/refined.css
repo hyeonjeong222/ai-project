@@ -1,0 +1,177 @@
+/* Onboard AI — UI 고도화 오버레이 (onboard.css 위에 로드)
+   목표: 버튼 위계·크기 통일, 상태 피드백, 정렬·간격 정리, 가독성(최소 폰트 상향)
+   변형: [data-density=comfortable|compact], [data-read=lg], [data-btn=soft] */
+
+/* ===== 1. 버튼 시스템 ===== */
+.uiv2 .button { min-height: 38px; border-radius: 8px; padding: 0 16px; font-size: 13px; font-weight: 650; gap: 7px; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .1s ease, color .15s ease; }
+.uiv2 .button:hover { transform: none; }
+.uiv2 .button:active { transform: translateY(1px); }
+.uiv2 .button.primary { box-shadow: none; }
+.uiv2 .button.primary:hover { background: #064ea9; box-shadow: 0 4px 12px rgba(7, 88, 189, .22); }
+.uiv2 .button.primary:active { background: #05438f; box-shadow: none; }
+.uiv2 .button.secondary { color: var(--ink); }
+.uiv2 .button.secondary:hover { border-color: #9db0c6; background: #f4f7fa; }
+.uiv2 .button.secondary:active { background: #edf1f6; }
+.uiv2 .button.ghost { color: var(--muted); }
+.uiv2 .button.ghost:hover { background: #eef2f7; color: var(--ink); }
+.uiv2 .button.compact { min-height: 32px; padding: 0 12px; font-size: 12px; }
+.uiv2 .icon-button { width: 34px; height: 34px; border-radius: 8px; transition: background .15s ease, color .15s ease; }
+.uiv2 .icon-button:active { background: #e2e9f1; }
+.uiv2 .request-link { min-height: 34px; padding: 0 12px; font-size: 12px; }
+.uiv2 button:focus-visible, .uiv2 a:focus-visible { outline: 2px solid rgba(39, 128, 238, .5); outline-offset: 2px; }
+[data-btn="soft"] .button { border-radius: 10px; }
+[data-btn="soft"] .button.primary { box-shadow: 0 6px 14px rgba(7, 88, 189, .18); }
+[data-btn="soft"] .button.secondary { box-shadow: 0 1px 2px rgba(8, 24, 48, .06); }
+[data-btn="soft"] .icon-button { border-radius: 10px; }
+
+/* ===== 2. 컨트롤 높이 정렬 ===== */
+.uiv2 .search-field, .uiv2 .select-field { min-height: 38px; border-radius: 8px; }
+.uiv2 .search-field input { font-size: 12px; }
+.uiv2 .select-field select { font-size: 12px; }
+.uiv2 .range-switch button { min-height: 34px; padding: 0 13px; font-size: 11px; }
+.uiv2 .workspace-select select { height: 38px; }
+.uiv2 .composer-inner button { transition: background .15s ease, transform .1s ease; }
+.uiv2 .composer-inner button:hover { background: #064ea9; }
+.uiv2 .composer-inner button:active { transform: translateY(1px); }
+.uiv2 .field-label input, .uiv2 .field-label select { height: 42px; border-radius: 8px; }
+.uiv2 .field-label textarea { border-radius: 8px; }
+
+/* ===== 3. 상태 피드백 ===== */
+.uiv2 .thread-item, .uiv2 .history-list > button, .uiv2 .inbox-list > button, .uiv2 .suggestion-grid button, .uiv2 .request-kind-grid button, .uiv2 .upload-mode-card { transition: background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.uiv2 .sidebar-nav a { transition: background .15s ease, color .15s ease; }
+.uiv2 .sidebar-nav a:active { background: rgba(255, 255, 255, .09); }
+.uiv2 .answer-actions button { transition: background .15s ease, border-color .15s ease, color .15s ease; }
+.uiv2 .toggle-button { transition: color .15s ease; }
+.uiv2 .toggle-button:hover { color: var(--muted); }
+.uiv2 .toggle-button.on:hover { color: #047a57; }
+.uiv2 .citation-stack button:hover, .uiv2 .review-citations button:hover { border-color: #99c2fa; background: #e7f1ff; }
+
+/* ===== 4. 정렬·간격 ===== */
+.uiv2 .page-header { align-items: center; margin-bottom: 26px; }
+.uiv2 .page-header h1 { font-size: 24px; }
+.uiv2 .page-actions, .uiv2 .action-panel > div:last-child { display: flex; gap: 8px; }
+.uiv2 .action-panel { padding: 22px; }
+.uiv2 .invite-card form { grid-template-columns: minmax(0, 1fr) 220px auto; gap: 12px; }
+.uiv2 .table-toolbar { padding: 12px 14px; }
+.uiv2 .metric-grid { gap: 14px; }
+.uiv2 .dashboard-grid, .uiv2 .analytics-grid { gap: 14px; }
+.uiv2 .panel-header { align-items: center; }
+.uiv2 .thread-rail { padding: 18px 14px; }
+.uiv2 .messages-inner { gap: 24px; }
+
+/* ===== 5. 가독성: 최소 폰트 상향 (기본) ===== */
+.uiv2 .eyebrow { font-size: 10.5px; }
+.uiv2 .muted { line-height: 1.6; }
+.uiv2 .metric-card span { font-size: 11.5px; }
+.uiv2 .metric-card small { font-size: 10.5px; }
+.uiv2 .status-badge { min-height: 24px; padding: 0 9px; font-size: 9.5px; }
+.uiv2 .thread-item span { font-size: 11.5px; }
+.uiv2 .thread-item small { font-size: 10px; }
+.uiv2 .composer-meta { font-size: 10.5px; }
+.uiv2 .document-row span:not(.status-badge), .uiv2 .document-row strong { font-size: 12px; }
+.uiv2 .document-row small { font-size: 10px; }
+.uiv2 .document-title-link { font-size: 12px; }
+.uiv2 .table-head { font-size: 9px; }
+.uiv2 .toggle-button, .uiv2 .toggle-button span { font-size: 9.5px !important; }
+.uiv2 .gap-list strong { font-size: 12px; }
+.uiv2 .gap-list small { font-size: 10px; }
+.uiv2 .chart-legend { font-size: 10px; }
+.uiv2 .data-chip { font-size: 10px; }
+.uiv2 .text-link { font-size: 11px; }
+.uiv2 .answer-actions { font-size: 10.5px; }
+.uiv2 .citation-safe strong { font-size: 10.5px; }
+.uiv2 .citation-safe small { font-size: 9.5px; }
+.uiv2 .human-answer-link { font-size: 10.5px; }
+.uiv2 .suggestion-grid button span { font-size: 10px; }
+.uiv2 .suggestion-grid button strong { font-size: 12.5px; }
+.uiv2 .ready-note { font-size: 11px; }
+.uiv2 .request-kind-grid span { font-size: 10.5px; }
+.uiv2 .request-list > article > p { font-size: 11px; }
+.uiv2 .request-list h3 { font-size: 13px; }
+.uiv2 .request-list time { font-size: 9.5px; }
+.uiv2 .request-kind, .uiv2 .request-status { font-size: 9px; }
+.uiv2 .human-response strong { font-size: 10.5px; }
+.uiv2 .human-response p { font-size: 11px; }
+.uiv2 .history-list strong { font-size: 11.5px; }
+.uiv2 .history-list small { font-size: 9.5px; }
+.uiv2 .history-list p { font-size: 11px; }
+.uiv2 .history-list footer { font-size: 9.5px; }
+.uiv2 .review-message p { font-size: 11.5px; }
+.uiv2 .review-citations strong { font-size: 9.5px; }
+.uiv2 .review-citations small { font-size: 8.5px; }
+.uiv2 .admin-notes textarea { font-size: 11px; }
+.uiv2 .note-history p { font-size: 10px; }
+.uiv2 .inbox-list > button > strong { font-size: 11.5px; }
+.uiv2 .inbox-list > button > small { font-size: 9.5px; }
+.uiv2 .request-original > p:last-child { font-size: 12px; }
+.uiv2 .response-actions p { font-size: 10.5px; }
+.uiv2 .usage-panel li span { font-size: 11px; }
+.uiv2 .usage-panel li small { font-size: 9.5px; }
+.uiv2 .usage-panel li strong { font-size: 11px; }
+.uiv2 .analytics-gaps strong { font-size: 11px; }
+.uiv2 .analytics-gaps small { font-size: 9.5px; }
+.uiv2 .analytics-gaps em { font-size: 9px; }
+.uiv2 .member-list strong { font-size: 11px; }
+.uiv2 .member-list small { font-size: 9.5px; }
+.uiv2 .member-role { font-size: 9px; }
+.uiv2 .pending-invites > article > span { font-size: 11px; }
+.uiv2 .pending-invites > article > strong { font-size: 10px; }
+.uiv2 .company-card p:not(.eyebrow) { font-size: 10px; }
+.uiv2 .company-role-guide strong { font-size: 11px; }
+.uiv2 .company-role-guide span { font-size: 9.5px; }
+.uiv2 .upload-summary li { font-size: 11px; }
+.uiv2 .summary-note strong { font-size: 11px; }
+.uiv2 .summary-note p { font-size: 10px; }
+.uiv2 .section-heading p { font-size: 11px; }
+.uiv2 .ingestion-steps strong { font-size: 10px; }
+.uiv2 .ingestion-steps small { font-size: 9px; }
+.uiv2 .upload-dropzone p { font-size: 11px; }
+.uiv2 .upload-dropzone small { font-size: 10px; }
+.uiv2 .empty-note { font-size: 12px; }
+.uiv2 .inbox-summary span { font-size: 10.5px; }
+
+/* ===== 6. 가독성 강화 변형 [data-read=lg] ===== */
+[data-read="lg"] .message-bubble { font-size: 14px; line-height: 1.8; }
+[data-read="lg"] .thread-item strong { font-size: 13px; }
+[data-read="lg"] .thread-item span { font-size: 12px; }
+[data-read="lg"] .metric-card strong { font-size: 26px; }
+[data-read="lg"] .metric-card span { font-size: 12.5px; }
+[data-read="lg"] .document-row span:not(.status-badge), [data-read="lg"] .document-row strong, [data-read="lg"] .document-title-link { font-size: 13px; }
+[data-read="lg"] .document-row small { font-size: 11px; }
+[data-read="lg"] .page-header > div > p:not(.eyebrow) { font-size: 13px; }
+[data-read="lg"] .gap-list strong { font-size: 13px; }
+[data-read="lg"] .review-message p { font-size: 12.5px; }
+[data-read="lg"] .history-list p { font-size: 12px; }
+[data-read="lg"] .request-list > article > p { font-size: 12px; }
+[data-read="lg"] .usage-panel li span, [data-read="lg"] .usage-panel li strong { font-size: 12px; }
+[data-read="lg"] .analytics-gaps strong { font-size: 12px; }
+[data-read="lg"] .suggestion-grid button strong { font-size: 13.5px; }
+[data-read="lg"] .field-label { font-size: 13.5px; }
+[data-read="lg"] .request-original > p:last-child { font-size: 13px; }
+
+/* ===== 7. 밀도 변형 ===== */
+[data-density="comfortable"] .admin-page { padding: 40px clamp(24px, 3.5vw, 52px) 60px; }
+[data-density="comfortable"] .metric-grid { gap: 16px; }
+[data-density="comfortable"] .metric-card { min-height: 128px; padding: 22px; }
+[data-density="comfortable"] .dashboard-grid, [data-density="comfortable"] .analytics-grid { gap: 16px; }
+[data-density="comfortable"] .chart-panel, [data-density="comfortable"] .unanswered-panel { padding: 24px; }
+[data-density="comfortable"] .document-row { min-height: 86px; padding: 14px 20px; }
+[data-density="comfortable"] .table-head { padding: 0 20px; }
+[data-density="comfortable"] .page-header { margin-bottom: 32px; }
+[data-density="comfortable"] .messages-inner { gap: 28px; padding: 36px 0 48px; }
+[data-density="comfortable"] .form-section { padding: 27px; }
+[data-density="comfortable"] .request-form-card { padding: 27px; }
+[data-density="compact"] .admin-page { padding: 24px clamp(16px, 2.5vw, 32px) 40px; }
+[data-density="compact"] .metric-grid { gap: 10px; }
+[data-density="compact"] .metric-card { min-height: 96px; padding: 15px; gap: 11px; }
+[data-density="compact"] .metric-card strong { font-size: 21px; }
+[data-density="compact"] .dashboard-grid, [data-density="compact"] .analytics-grid { gap: 10px; }
+[data-density="compact"] .chart-panel, [data-density="compact"] .unanswered-panel { min-height: 300px; padding: 16px; }
+[data-density="compact"] .document-row { min-height: 62px; padding: 8px 14px; }
+[data-density="compact"] .page-header { margin-bottom: 18px; }
+[data-density="compact"] .page-header h1 { font-size: 21px; }
+[data-density="compact"] .messages-inner { gap: 18px; padding: 24px 0 36px; }
+[data-density="compact"] .gap-list li { padding: 8px 2px; }
+[data-density="compact"] .thread-item { padding: 8px 10px; }
+[data-density="compact"] .action-panel { padding: 16px 20px; margin-top: 10px; }
+[data-density="compact"] .usage-panel, [data-density="compact"] .analytics-gaps { padding: 16px; }

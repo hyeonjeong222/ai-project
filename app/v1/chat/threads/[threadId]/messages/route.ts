@@ -182,10 +182,12 @@ export async function POST(
           await admin.from("chat_threads").update({ updated_at: new Date().toISOString() }).eq("id", threadId);
           controller.enqueue(encoder.encode(sse({ type: "done", data: { messageId: assistant.id, citations } })));
         } catch (error) {
+          const code = error instanceof ApiError ? error.code : "CHAT_STREAM_ERROR";
+          const message = error instanceof ApiError ? error.message : "답변 생성 중 오류가 발생했습니다.";
           console.error("Chat stream failed", error instanceof Error ? error.message : "unknown");
           controller.enqueue(encoder.encode(sse({
             type: "error",
-            data: { code: "CHAT_STREAM_ERROR", message: "답변 생성 중 오류가 발생했습니다." },
+            data: { code, message },
           })));
         } finally {
           controller.close();
