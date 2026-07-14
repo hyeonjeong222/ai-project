@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/internal/ingestion/run",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 18 * * *"
     }
   ],
   "functions": {
