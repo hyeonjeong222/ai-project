@@ -19,7 +19,11 @@ export type ServerEnv = z.infer<typeof serverSchema>;
 let cached: ServerEnv | undefined;
 
 export function getServerEnv(): ServerEnv {
-  cached ??= serverSchema.parse(process.env);
+  cached ??= serverSchema.parse({
+    ...process.env,
+    OPENAI_API_KEY: normalizeSecret(process.env.OPENAI_API_KEY),
+    OPENAI_RESPONSE_MODEL: normalizeSecret(process.env.OPENAI_RESPONSE_MODEL),
+  });
   return cached;
 }
 
@@ -38,6 +42,10 @@ export function hasOpenAIConfig() {
 
 export function getOpenAIApiKey() {
   return openAIApiKeySchema.parse(normalizeSecret(getServerEnv().OPENAI_API_KEY));
+}
+
+export function getOpenAIResponseModel() {
+  return normalizeSecret(getServerEnv().OPENAI_RESPONSE_MODEL) ?? "gpt-5.6-luna";
 }
 
 export function serverConfigStatus() {
