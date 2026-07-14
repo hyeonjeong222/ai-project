@@ -12,27 +12,71 @@ function tokens(text: string) {
   return encoding.encode(text);
 }
 
-function decode(tokenIds: number[]) {
-  return encoding.decode(tokenIds);
-}
-
 function normalized(text: string) {
-  return text.replace(/\r\n/g, "\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+  return text.replace(/\uFFFD/g, "").replace(/\r\n/g, "\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 function tail(text: string, count = OVERLAP_TOKENS) {
-  const ids = tokens(text);
-  return decode(ids.slice(Math.max(0, ids.length - count))).trim();
+  const characters = Array.from(text);
+  if (tokens(text).length <= count) return text.trim();
+  let low = 0;
+  let high = characters.length;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    const candidate = characters.slice(mid).join("");
+    if (tokens(candidate).length > count) low = mid + 1;
+    else high = mid;
+  }
+  return characters.slice(low).join("").trim();
+}
+
+function splitLongSegment(segment: string, maxTokens = MAX_TOKENS) {
+  const characters = Array.from(segment);
+  const parts: string[] = [];
+  let start = 0;
+  while (start < characters.length) {
+    let low = start + 1;
+    let high = characters.length;
+    let best = low;
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      const candidate = characters.slice(start, mid).join("");
+      if (tokens(candidate).length <= maxTokens) {
+        best = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    const part = characters.slice(start, best).join("").trim();
+    if (part) parts.push(part);
+    start = best;
+  }
+  return parts;
 }
 
 function splitOversizedText(text: string) {
-  const ids = tokens(text);
-  if (ids.length <= MAX_TOKENS) return [text];
+  if (tokens(text).length <= MAX_TOKENS) return [text];
+  const segments = text.split(/(\n\n+|(?<=[.!?。！？])\s+)/).filter(Boolean);
   const parts: string[] = [];
-  for (let start = 0; start < ids.length; start += MAX_TOKENS - OVERLAP_TOKENS) {
-    parts.push(decode(ids.slice(start, start + MAX_TOKENS)).trim());
-    if (start + MAX_TOKENS >= ids.length) break;
+  let current = "";
+  for (const segment of segments) {
+    if (tokens(segment).length > MAX_TOKENS) {
+      if (current.trim()) parts.push(current.trim());
+      parts.push(...splitLongSegment(segment));
+      current = "";
+      continue;
+    }
+    const candidate = [current, segment].filter(Boolean).join("");
+    if (current && tokens(candidate).length > MAX_TOKENS) {
+      parts.push(current.trim());
+      const overlap = tail(current);
+      current = [overlap, segment].filter(Boolean).join("\n\n");
+    } else {
+      current = candidate;
+    }
   }
+  if (current.trim()) parts.push(current.trim());
   return parts.filter(Boolean);
 }
 
