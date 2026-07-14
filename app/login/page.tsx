@@ -1,10 +1,11 @@
 "use client";
 
-import { Bot, KeyRound, Mail, ShieldCheck, UserRound } from "lucide-react";
+import { KeyRound, Mail, ShieldCheck, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
 
+import { BrandLogo } from "@/components/app/brand-assets";
 import { sanitizeInternalRedirect } from "@/lib/auth/redirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -46,11 +47,11 @@ function LoginContent() {
   return (
     <main className="login-page">
       <section className="login-story" aria-label="서비스 소개">
-        <div className="brand-mark brand-mark-large"><Bot size={26} /></div>
+        <BrandLogo className="login-wordmark" />
         <div>
-          <p className="eyebrow light">ONBOARD AI</p>
+          <p className="eyebrow light">MANUALMIND</p>
           <h1>첫날의 질문을<br />회사의 지식으로 답합니다.</h1>
-          <p>검증된 사내 문서에서 근거를 찾고, 출처와 함께 빠르게 안내하는 온보딩 워크스페이스입니다.</p>
+          <p>Manualmind가 검증된 사내 문서에서 근거를 찾고, 출처와 함께 빠르게 안내하는 온보딩 워크스페이스입니다.</p>
         </div>
         <div className="login-proof">
           <span>Private workspace</span><span>Source grounded</span><span>Secure by design</span>
